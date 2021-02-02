@@ -1,23 +1,33 @@
-from abs_imports import main
 import os
-import pytest
 import shutil
+
+import pytest
+
+from abs_imports import main
+
 
 def test_main(tmpdir):
     os.mkdir(os.path.join(str(tmpdir), 'mypackage'))
     os.mkdir(os.path.join(str(tmpdir), 'mypackage', 'mysubpackage'))
-    shutil.copy(os.path.join('tests', 'data', 'bar.py'), os.path.join(str(tmpdir), 'mypackage', 'mysubpackage', 'bar.py'))
+    tmp_file = os.path.join(
+        str(tmpdir), 'mypackage', 'mysubpackage', 'bar.py',
+    )
+    shutil.copy(
+        os.path.join('tests', 'data', 'bar.py'), tmp_file,
+    )
 
     cwd = os.getcwd()
     os.chdir(str(tmpdir))
-    main(
-        (
-            os.path.join('mypackage', 'mysubpackage', 'bar.py'),
+    try:
+        main(
+            (
+                os.path.join('mypackage', 'mysubpackage', 'bar.py'),
+            ),
         )
-    )
-    os.chdir(cwd)
+    finally:
+        os.chdir(cwd)
 
-    with open(os.path.join(str(tmpdir), 'mypackage', 'mysubpackage', 'bar.py')) as fd:
+    with open(tmp_file) as fd:
         result = fd.read()
 
     expected = (
@@ -35,17 +45,22 @@ def test_main(tmpdir):
 def test_main_src(tmpdir):
     os.mkdir(os.path.join(str(tmpdir), 'mypackage'))
     os.mkdir(os.path.join(str(tmpdir), 'mypackage', 'mysubpackage'))
-    shutil.copy(os.path.join('tests', 'data', 'bar.py'), os.path.join(str(tmpdir), 'mypackage', 'mysubpackage', 'bar.py'))
+    tmp_file = os.path.join(
+        str(tmpdir), 'mypackage', 'mysubpackage', 'bar.py',
+    )
+    shutil.copy(
+        os.path.join('tests', 'data', 'bar.py'), tmp_file,
+    )
 
     main(
         (
-            '--src',
+            '--application-directories',
             str(tmpdir),
-            os.path.join(str(tmpdir), 'mypackage', 'mysubpackage', 'bar.py'),
-        )
+            tmp_file,
+        ),
     )
 
-    with open(os.path.join(str(tmpdir), 'mypackage', 'mysubpackage', 'bar.py')) as fd:
+    with open(tmp_file) as fd:
         result = fd.read()
 
     expected = (
@@ -64,31 +79,43 @@ def test_non_existent_file(tmpdir):
     os.mkdir(os.path.join(str(tmpdir), 'mypackage'))
     os.mkdir(os.path.join(str(tmpdir), 'mypackage', 'mysubpackage'))
     os.mkdir(os.path.join(str(tmpdir), 'otherdir'))
-    shutil.copy(os.path.join('tests', 'data', 'bar.py'), os.path.join(str(tmpdir), 'mypackage', 'mysubpackage', 'bar.py'))
+    tmp_file = os.path.join(
+        str(tmpdir), 'mypackage', 'mysubpackage', 'bar.py',
+    )
+    shutil.copy(
+        os.path.join('tests', 'data', 'bar.py'), tmp_file,
+    )
 
-    with pytest.raises(ValueError, match=r'File .* cannot be resolved relative to .*'):
+    msg = r'File .* cannot be resolved relative to .*'
+    with pytest.raises(ValueError, match=msg):
         main(
             (
-                '--src',
+                '--application-directories',
                 os.path.join(str(tmpdir), 'otherdir'),
-                os.path.join(str(tmpdir), 'mypackage', 'mysubpackage', 'bar.py'),
-            )
+                tmp_file,
+            ),
         )
+
 
 def test_noop(tmpdir):
     os.mkdir(os.path.join(str(tmpdir), 'mypackage'))
     os.mkdir(os.path.join(str(tmpdir), 'mypackage', 'mysubpackage'))
-    shutil.copy(os.path.join('tests', 'data', 'baz.py'), os.path.join(str(tmpdir), 'mypackage', 'mysubpackage', 'baz.py'))
+    tmp_file = os.path.join(
+        str(tmpdir), 'mypackage', 'mysubpackage', 'baz.py',
+    )
+    shutil.copy(
+        os.path.join('tests', 'data', 'baz.py'), tmp_file,
+    )
 
     main(
         (
-            '--src',
+            '--application-directories',
             str(tmpdir),
-            os.path.join(str(tmpdir), 'mypackage', 'mysubpackage', 'baz.py'),
-        )
+            tmp_file,
+        ),
     )
 
-    with open(os.path.join(str(tmpdir), 'mypackage', 'mysubpackage', 'baz.py')) as fd:
+    with open(tmp_file) as fd:
         result = fd.read()
 
     with open(os.path.join('tests', 'data', 'baz.py')) as fd:
