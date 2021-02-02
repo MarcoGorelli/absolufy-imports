@@ -20,22 +20,25 @@ class Visitor(ast.NodeVisitor):
             self.generic_visit(node)
             return
 
-        to_correct = '.'.join(self.parts[:-level])
+        absolute_import = '.'.join(self.parts[:-level])
 
         if node.module is None:
             self.to_replace[
                 node.lineno
-            ] = (rf'(from\s+){"."*level}', f'\\1{to_correct}')
+            ] = (rf'(from\s+){"."*level}', f'\\1{absolute_import}')
         else:
             module = node.module
             self.to_replace[
                 node.lineno
-            ] = (rf'(from\s+){"."*level}{module}', f'\\1{to_correct}.{module}')
+            ] = (
+                rf'(from\s+){"."*level}{module}',
+                f'\\1{absolute_import}.{module}',
+            )
 
         self.generic_visit(node)
 
 
-def one_files(file: str, application_directories: str) -> None:
+def absolute_imports(file: str, application_directories: str) -> None:
     try:
         relative_path = Path(file).resolve().relative_to(
             application_directories,
@@ -74,7 +77,7 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
     parser.add_argument('files', nargs='*')
     args = parser.parse_args(argv)
     for file in args.files:
-        one_files(file, args.application_directories)
+        absolute_imports(file, args.application_directories)
 
 
 if __name__ == '__main__':
