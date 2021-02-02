@@ -5,7 +5,7 @@
 abs-imports
 ===========
 
-A pre-commit hook to automatically convert relative absolute to absolute.
+A pre-commit hook to automatically convert relative imports to absolute.
 
 ## Usage as a pre-commit hook
 
