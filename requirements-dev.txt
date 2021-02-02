@@ -1,0 +1,4 @@
+covdefaults
+pytest
+pytest-cov
+pytest-randomly

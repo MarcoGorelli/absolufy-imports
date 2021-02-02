@@ -1,0 +1,10 @@
+
+
+[report]
+exclude_lines =
+    pragma: nocover
+    pragma: nocover_${PRAGMA_VERSION}
+    if __name__ == '__main__':
+
+[run]
+source = abs_imports
