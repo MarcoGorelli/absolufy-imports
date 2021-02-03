@@ -7,6 +7,12 @@ abs-imports
 
 A pre-commit hook to automatically convert relative imports to absolute.
 
+## Installation
+
+```
+pip install abs-imports
+```
+
 ## Usage as a pre-commit hook
 
 See [pre-commit](https://github.com/pre-commit/pre-commit) for instructions
@@ -18,6 +24,16 @@ Sample `.pre-commit-config.yaml`:
     rev: v0.1.2
     hooks:
     -   id: abs-imports
+```
+
+## Command-line example
+
+```console
+$ cat mypackage/myfile.py
+from . import __version__
+$ abs_imports mypackage/myfile.py
+$ cat mypackage/myfile.py
+from mypackage import __version__
 ```
 
 ## See also
