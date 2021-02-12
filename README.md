@@ -21,7 +21,7 @@ Sample `.pre-commit-config.yaml`:
 
 ```yaml
 -   repo: https://github.com/MarcoGorelli/abs-imports
-    rev: v0.1.2
+    rev: v0.1.3
     hooks:
     -   id: abs-imports
 ```
