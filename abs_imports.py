@@ -39,13 +39,11 @@ class Visitor(ast.NodeVisitor):
 
 
 def absolute_imports(file: str, application_directories: str) -> None:
-    srcs = application_directories.split(':')
-    relative_path = file
+    srcs = (Path(i).as_posix() for i in application_directories.split(','))
+    relative_path = Path(file).as_posix()
     for i in srcs:
-        if os.path.abspath(file).startswith(os.path.abspath(i)):
-            relative_path = os.path.abspath(relative_path).replace(
-                os.path.abspath(i), '',
-            ).lstrip(os.sep)
+        if relative_path.startswith(i):
+            relative_path = relative_path.replace(i, '').lstrip('/')
 
     with open(file, encoding='utf-8') as fd:
         txt = fd.read()
