@@ -50,13 +50,18 @@ def test_main_src(tmpdir):
         os.path.join('tests', 'data', 'bar.py'), tmp_file,
     )
 
-    main(
-        (
-            '--application-directories',
-            str(tmpdir),
-            tmp_file,
-        ),
-    )
+    cwd = os.getcwd()
+    os.chdir(str(tmpdir))
+    try:
+        main(
+            (
+                '--application-directories',
+                '.',
+                tmp_file,
+            ),
+        )
+    finally:
+        os.chdir(cwd)
 
     with open(tmp_file) as fd:
         result = fd.read()
@@ -83,13 +88,18 @@ def test_noop(tmpdir):
         os.path.join('tests', 'data', 'baz.py'), tmp_file,
     )
 
-    main(
-        (
-            '--application-directories',
-            str(tmpdir),
-            tmp_file,
-        ),
-    )
+    cwd = os.getcwd()
+    os.chdir(str(tmpdir))
+    try:
+        main(
+            (
+                '--application-directories',
+                '.',
+                tmp_file,
+            ),
+        )
+    finally:
+        os.chdir(cwd)
 
     with open(tmp_file) as fd:
         result = fd.read()

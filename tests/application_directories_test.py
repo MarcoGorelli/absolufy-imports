@@ -26,17 +26,25 @@ def test_main(tmpdir):
         os.path.join('tests', 'data', 'bar.py'), tmp_file_1,
     )
 
-    main(
-        (
-            os.path.join(str(tmpdir), 'mypackage', 'mysubpackage', 'bar.py'),
-            os.path.join(
-                str(tmpdir), 'src', 'mypackage',
-                'mysubpackage', 'bar.py',
+    cwd = os.getcwd()
+    os.chdir(str(tmpdir))
+    try:
+        main(
+            (
+                os.path.join(
+                    str(tmpdir), 'mypackage',
+                    'mysubpackage', 'bar.py',
+                ),
+                os.path.join(
+                    str(tmpdir), 'src', 'mypackage',
+                    'mysubpackage', 'bar.py',
+                ),
+                '--application-directories',
+                '.:src',
             ),
-            '--application-directories',
-            f'{str(tmpdir)},{str(tmpdir)}{os.sep}src',
-        ),
-    )
+        )
+    finally:
+        os.chdir(cwd)
 
     with open(tmp_file) as fd:
         result = fd.read()
@@ -49,6 +57,7 @@ def test_main(tmpdir):
         'print(T)\n'
         'print(D)\n'
     )
+    assert result == expected
 
     with open(tmp_file_1) as fd:
         result = fd.read()
@@ -86,17 +95,25 @@ def test_main_inverted_order(tmpdir):
         os.path.join('tests', 'data', 'bar.py'), tmp_file_1,
     )
 
-    main(
-        (
-            os.path.join(str(tmpdir), 'mypackage', 'mysubpackage', 'bar.py'),
-            os.path.join(
-                str(tmpdir), 'src', 'mypackage',
-                'mysubpackage', 'bar.py',
+    cwd = os.getcwd()
+    os.chdir(str(tmpdir))
+    try:
+        main(
+            (
+                os.path.join(
+                    str(tmpdir), 'mypackage',
+                    'mysubpackage', 'bar.py',
+                ),
+                os.path.join(
+                    str(tmpdir), 'src', 'mypackage',
+                    'mysubpackage', 'bar.py',
+                ),
+                '--application-directories',
+                '.:src',
             ),
-            '--application-directories',
-            f'{str(tmpdir)}{os.sep}src,{str(tmpdir)}',
-        ),
-    )
+        )
+    finally:
+        os.chdir(cwd)
 
     with open(tmp_file) as fd:
         result = fd.read()
@@ -109,6 +126,7 @@ def test_main_inverted_order(tmpdir):
         'print(T)\n'
         'print(D)\n'
     )
+    assert result == expected
 
     with open(tmp_file_1) as fd:
         result = fd.read()
