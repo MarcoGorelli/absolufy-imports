@@ -36,6 +36,18 @@ $ cat mypackage/myfile.py
 from mypackage import __version__
 ```
 
+If your package follows the popular `./src` layout, you can pass your application directories via `--application-directories`, e.g.
+
+```console
+ cat src/mypackage/myfile.py
+from . import __version__
+$ abs_imports src/mypackage/myfile.py --application-directories src
+$ cat src/mypackage/myfile.py
+from mypackage import __version__
+```
+
+Multiple application directories should be comma-separate, e.g. `--application-directories .,src`.
+
 ## See also
 
 Check out [pyupgrade](https://github.com/asottile/pyupgrade), which I learned a lot from when writing this.
