@@ -39,22 +39,19 @@ class Visitor(ast.NodeVisitor):
 
 
 def absolute_imports(file: str, application_directories: str) -> None:
-    try:
-        relative_path = Path(file).resolve().relative_to(
-            application_directories,
-        )
-    except ValueError as exc:
-        # raise error here!
-        raise ValueError(
-            f'File {file} cannot be resolved relative to '
-            f'{application_directories}',
-        ) from exc
+    srcs = application_directories.split(':')
+    relative_path = file
+    for i in srcs:
+        if os.path.abspath(file).startswith(os.path.abspath(i)):
+            relative_path = os.path.abspath(relative_path).replace(
+                os.path.abspath(i), '',
+            ).lstrip(os.sep)
 
     with open(file, encoding='utf-8') as fd:
         txt = fd.read()
     tree = ast.parse(txt)
 
-    visitor = Visitor(relative_path.parts)
+    visitor = Visitor(Path(relative_path).parts)
     visitor.visit(tree)
 
     if not visitor.to_replace:

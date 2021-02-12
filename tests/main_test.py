@@ -1,8 +1,6 @@
 import os
 import shutil
 
-import pytest
-
 from abs_imports import main
 
 
@@ -73,28 +71,6 @@ def test_main_src(tmpdir):
         'print(D)\n'
     )
     assert result == expected
-
-
-def test_non_existent_file(tmpdir):
-    os.mkdir(os.path.join(str(tmpdir), 'mypackage'))
-    os.mkdir(os.path.join(str(tmpdir), 'mypackage', 'mysubpackage'))
-    os.mkdir(os.path.join(str(tmpdir), 'otherdir'))
-    tmp_file = os.path.join(
-        str(tmpdir), 'mypackage', 'mysubpackage', 'bar.py',
-    )
-    shutil.copy(
-        os.path.join('tests', 'data', 'bar.py'), tmp_file,
-    )
-
-    msg = r'File .* cannot be resolved relative to .*'
-    with pytest.raises(ValueError, match=msg):
-        main(
-            (
-                '--application-directories',
-                os.path.join(str(tmpdir), 'otherdir'),
-                tmp_file,
-            ),
-        )
 
 
 def test_noop(tmpdir):
