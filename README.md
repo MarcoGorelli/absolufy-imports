@@ -39,14 +39,14 @@ from mypackage import __version__
 If your package follows the popular `./src` layout, you can pass your application directories via `--application-directories`, e.g.
 
 ```console
- cat src/mypackage/myfile.py
+$ cat src/mypackage/myfile.py
 from . import __version__
 $ abs_imports src/mypackage/myfile.py --application-directories src
 $ cat src/mypackage/myfile.py
 from mypackage import __version__
 ```
 
-Multiple application directories should be comma-separate, e.g. `--application-directories .:src`. This is the same as in [reorder-python-imports](https://github.com/asottile/reorder_python_imports).
+Multiple application directories should be comma-separated, e.g. `--application-directories .:src`. This is the same as in [reorder-python-imports](https://github.com/asottile/reorder_python_imports).
 
 ## See also
 
