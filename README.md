@@ -46,7 +46,7 @@ $ cat src/mypackage/myfile.py
 from mypackage import __version__
 ```
 
-Multiple application directories should be comma-separate, e.g. `--application-directories .,src`.
+Multiple application directories should be comma-separate, e.g. `--application-directories .:src`. This is the same as in [reorder-python-imports](https://github.com/asottile/reorder_python_imports).
 
 ## See also
 

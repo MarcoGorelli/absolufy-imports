@@ -1,6 +1,5 @@
 import argparse
 import ast
-import os
 import re
 from pathlib import Path
 from typing import MutableMapping
@@ -39,17 +38,23 @@ class Visitor(ast.NodeVisitor):
 
 
 def absolute_imports(file: str, application_directories: str) -> None:
-    srcs = (Path(i).as_posix() for i in application_directories.split(','))
-    relative_path = Path(file).as_posix()
+    srcs = (
+        Path(i).resolve()
+        for i in application_directories.split(':')
+    )
+    relative_path = Path(file)
     for i in srcs:
-        if relative_path.startswith(i):
-            relative_path = relative_path.replace(i, '').lstrip('/')
+        try:
+            relative_path = relative_path.resolve().relative_to(i)
+        except ValueError:
+            # `relative_path` can't be resolved relative to `i`
+            pass
 
     with open(file, encoding='utf-8') as fd:
         txt = fd.read()
     tree = ast.parse(txt)
 
-    visitor = Visitor(Path(relative_path).parts)
+    visitor = Visitor(relative_path.parts)
     visitor.visit(tree)
 
     if not visitor.to_replace:
@@ -68,7 +73,7 @@ def absolute_imports(file: str, application_directories: str) -> None:
 
 def main(argv: Optional[Sequence[str]] = None) -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument('--application-directories', default=os.getcwd())
+    parser.add_argument('--application-directories', default='.:src')
     parser.add_argument('files', nargs='*')
     args = parser.parse_args(argv)
     for file in args.files:
