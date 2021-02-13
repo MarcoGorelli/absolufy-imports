@@ -21,7 +21,7 @@ Sample `.pre-commit-config.yaml`:
 
 ```yaml
 -   repo: https://github.com/MarcoGorelli/abs-imports
-    rev: v0.2.0
+    rev: v0.2.1
     hooks:
     -   id: abs-imports
 ```
@@ -31,7 +31,7 @@ Sample `.pre-commit-config.yaml`:
 ```console
 $ cat mypackage/myfile.py
 from . import __version__
-$ abs_imports mypackage/myfile.py
+$ abs-imports mypackage/myfile.py
 $ cat mypackage/myfile.py
 from mypackage import __version__
 ```
@@ -41,7 +41,7 @@ If your package follows the popular `./src` layout, you can pass your applicatio
 ```console
  cat src/mypackage/myfile.py
 from . import __version__
-$ abs_imports src/mypackage/myfile.py --application-directories src
+$ abs-imports src/mypackage/myfile.py --application-directories src
 $ cat src/mypackage/myfile.py
 from mypackage import __version__
 ```
