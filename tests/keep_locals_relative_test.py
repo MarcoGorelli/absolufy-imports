@@ -31,9 +31,11 @@ def test_main(tmpdir):
 
     expected = (
         'from . import B\n'
+        'from .bar import baz\n'
         'from mypackage.foo import T\n'
         'from .bar import D\n'
         'from . import O\n'
+        'from datetime import datetime\n'
         '\n'
         'print(T)\n'
         'print(D)\n'

@@ -9,15 +9,18 @@ from typing import Tuple
 
 
 class Visitor(ast.NodeVisitor):
-    def __init__(self, parts: Sequence[str], keep_local_imports_relative: bool) -> None:
+    def __init__(
+            self,
+            parts: Sequence[str],
+            keep_local_imports_relative: bool,
+    ) -> None:
         self.parts = parts
         self.to_replace: MutableMapping[int, Tuple[str, str]] = {}
         self.keep_local_imports_relative = keep_local_imports_relative
 
     def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
         level = node.level
-
-        if not self.keep_local_imports_relative and level == 0 and node.module is not None:
+        if not self.keep_local_imports_relative and level == 0:
             # Already absolute import.
             self.generic_visit(node)
             return
@@ -27,13 +30,27 @@ class Visitor(ast.NodeVisitor):
             self.generic_visit(node)
             return
 
-        should_be_relative = self.keep_local_imports_relative and (
-            '.'.join(self.parts[:-1]) == node.module
-        )
+        if (
+            self.keep_local_imports_relative
+            and level == 0
+            and node.module is not None
+            and not node.module.startswith(self.parts[0])
+        ):
+            # Third-party import
+            self.generic_visit(node)
+            return
+
+        should_be_relative = self.keep_local_imports_relative and level == 0
         if should_be_relative:
+            if node.module == '.'.join(self.parts[:-1]):
+                # e.g. from a.b import c -> from . import c
+                replacement = '\\1.'
+            else:
+                # e.g. from a.b.c import d -> from .c import d
+                replacement = '\\1'
             self.to_replace[node.lineno] = (
                 rf'(from\s+){".".join(self.parts[:-1])}',
-                f'\\1.',
+                replacement,
             )
             self.generic_visit(node)
             return
@@ -58,7 +75,12 @@ class Visitor(ast.NodeVisitor):
         self.generic_visit(node)
 
 
-def absolute_imports(file: str, srcs: Sequence[str], *, keep_local_imports_relative=False) -> None:
+def absolute_imports(
+        file: str,
+        srcs: Sequence[str],
+        *,
+        keep_local_imports_relative: bool = False,
+) -> None:
     relative_path = Path(file)
     for i in srcs:
         try:
@@ -102,7 +124,9 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
 
     for file in args.files:
         absolute_imports(
-            file, srcs, keep_local_imports_relative=args.keep_local_imports_relative,
+            file,
+            srcs,
+            keep_local_imports_relative=args.keep_local_imports_relative,
         )
 
 
