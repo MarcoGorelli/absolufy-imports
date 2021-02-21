@@ -50,9 +50,11 @@ def test_main(tmpdir):
         result = fd.read()
     expected = (
         'from mypackage.mysubpackage import B\n'
+        'from mypackage.mysubpackage.bar import baz\n'
         'from mypackage.foo import T\n'
         'from mypackage.mysubpackage.bar import D\n'
         'from mypackage.mysubpackage import O\n'
+        'from datetime import datetime\n'
         '\n'
         'print(T)\n'
         'print(D)\n'
@@ -63,9 +65,11 @@ def test_main(tmpdir):
         result = fd.read()
     expected = (
         'from mypackage.mysubpackage import B\n'
+        'from mypackage.mysubpackage.bar import baz\n'
         'from mypackage.foo import T\n'
         'from mypackage.mysubpackage.bar import D\n'
         'from mypackage.mysubpackage import O\n'
+        'from datetime import datetime\n'
         '\n'
         'print(T)\n'
         'print(D)\n'
@@ -119,9 +123,11 @@ def test_main_inverted_order(tmpdir):
         result = fd.read()
     expected = (
         'from mypackage.mysubpackage import B\n'
+        'from mypackage.mysubpackage.bar import baz\n'
         'from mypackage.foo import T\n'
         'from mypackage.mysubpackage.bar import D\n'
         'from mypackage.mysubpackage import O\n'
+        'from datetime import datetime\n'
         '\n'
         'print(T)\n'
         'print(D)\n'
@@ -132,9 +138,11 @@ def test_main_inverted_order(tmpdir):
         result = fd.read()
     expected = (
         'from mypackage.mysubpackage import B\n'
+        'from mypackage.mysubpackage.bar import baz\n'
         'from mypackage.foo import T\n'
         'from mypackage.mysubpackage.bar import D\n'
         'from mypackage.mysubpackage import O\n'
+        'from datetime import datetime\n'
         '\n'
         'print(T)\n'
         'print(D)\n'
