@@ -7,6 +7,12 @@ absolufy-imports
 
 A pre-commit hook to automatically convert relative imports to absolute.
 
+p align="center">
+    <a href="#readme">
+        <img alt="demo" src="https://raw.githubusercontent.com/nbQA-dev/nbQA-demo/master/abs-imports.gif">
+    </a>
+</p>
+
 ## Installation
 
 ```
