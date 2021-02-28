@@ -5,7 +5,13 @@
 abs-imports
 ===========
 
-A pre-commit hook to automatically convert relative absolute to absolute.
+A pre-commit hook to automatically convert relative imports to absolute.
+
+## Installation
+
+```
+pip install abs-imports
+```
 
 ## Usage as a pre-commit hook
 
@@ -15,10 +21,32 @@ Sample `.pre-commit-config.yaml`:
 
 ```yaml
 -   repo: https://github.com/MarcoGorelli/abs-imports
-    rev: v0.1.2
+    rev: v0.2.1
     hooks:
     -   id: abs-imports
 ```
+
+## Command-line example
+
+```console
+$ cat mypackage/myfile.py
+from . import __version__
+$ abs-imports mypackage/myfile.py
+$ cat mypackage/myfile.py
+from mypackage import __version__
+```
+
+If your package follows the popular `./src` layout, you can pass your application directories via `--application-directories`, e.g.
+
+```console
+$ cat src/mypackage/myfile.py
+from . import __version__
+$ abs-imports src/mypackage/myfile.py --application-directories src
+$ cat src/mypackage/myfile.py
+from mypackage import __version__
+```
+
+Multiple application directories should be comma-separated, e.g. `--application-directories .:src`. This is the same as in [reorder-python-imports](https://github.com/asottile/reorder_python_imports).
 
 ## See also
 
