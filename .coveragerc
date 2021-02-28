@@ -7,4 +7,4 @@ exclude_lines =
     if __name__ == '__main__':
 
 [run]
-source = abs_imports
+source = absolufy_imports

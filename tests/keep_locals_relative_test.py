@@ -1,7 +1,7 @@
 import os
 import shutil
 
-from abs_imports import main
+from absolufy_imports import main
 
 
 def test_main(tmpdir):

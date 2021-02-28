@@ -1,8 +1,8 @@
-[![Build Status](https://github.com/MarcoGorelli/abs-imports/workflows/tox/badge.svg)](https://github.com/MarcoGorelli/abs-imports/actions?workflow=tox)
-[![Coverage](https://codecov.io/gh/MarcoGorelli/abs-imports/branch/main/graph/badge.svg)](https://codecov.io/gh/MarcoGorelli/abs-imports)
-[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/MarcoGorelli/abs-imports/main.svg)](https://results.pre-commit.ci/latest/github/MarcoGorelli/abs-imports/main)
+[![Build Status](https://github.com/MarcoGorelli/absolufy-imports/workflows/tox/badge.svg)](https://github.com/MarcoGorelli/absolufy-imports/actions?workflow=tox)
+[![Coverage](https://codecov.io/gh/MarcoGorelli/absolufy-imports/branch/main/graph/badge.svg)](https://codecov.io/gh/MarcoGorelli/absolufy-imports)
+[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/MarcoGorelli/absolufy-imports/main.svg)](https://results.pre-commit.ci/latest/github/MarcoGorelli/absolufy-imports/main)
 
-abs-imports
+absolufy-imports
 ===========
 
 A pre-commit hook to automatically convert relative imports to absolute.
@@ -10,7 +10,7 @@ A pre-commit hook to automatically convert relative imports to absolute.
 ## Installation
 
 ```
-pip install abs-imports
+pip install absolufy-imports
 ```
 
 ## Usage as a pre-commit hook
@@ -20,10 +20,10 @@ See [pre-commit](https://github.com/pre-commit/pre-commit) for instructions
 Sample `.pre-commit-config.yaml`:
 
 ```yaml
--   repo: https://github.com/MarcoGorelli/abs-imports
+-   repo: https://github.com/MarcoGorelli/absolufy-imports
     rev: v0.2.1
     hooks:
-    -   id: abs-imports
+    -   id: absolufy-imports
 ```
 
 ## Command-line example
@@ -31,7 +31,7 @@ Sample `.pre-commit-config.yaml`:
 ```console
 $ cat mypackage/myfile.py
 from . import __version__
-$ abs-imports mypackage/myfile.py
+$ absolufy-imports mypackage/myfile.py
 $ cat mypackage/myfile.py
 from mypackage import __version__
 ```
@@ -41,7 +41,7 @@ If your package follows the popular `./src` layout, you can pass your applicatio
 ```console
 $ cat src/mypackage/myfile.py
 from . import __version__
-$ abs-imports src/mypackage/myfile.py --application-directories src
+$ absolufy-imports src/mypackage/myfile.py --application-directories src
 $ cat src/mypackage/myfile.py
 from mypackage import __version__
 ```
