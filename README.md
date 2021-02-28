@@ -5,7 +5,7 @@
 absolufy-imports
 ===========
 
-A pre-commit hook to automatically convert relative imports to absolute.
+A tool and pre-commit hook to automatically convert relative imports to absolute.
 
 <p align="center">
     <a href="#readme">
