@@ -61,7 +61,7 @@ class Visitor(ast.NodeVisitor):
             # e.g. from . import b
             self.to_replace[
                 node.lineno
-            ] = (rf'(from\s+){"."*level}', f'\\1{absolute_import}')
+            ] = (rf'(from\s+){"."*level}\s*', f'\\1{absolute_import} ')
         else:
             # e.g. from .b import c
             module = node.module
