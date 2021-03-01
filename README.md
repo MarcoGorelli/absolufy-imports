@@ -27,7 +27,7 @@ Sample `.pre-commit-config.yaml`:
 
 ```yaml
 -   repo: https://github.com/MarcoGorelli/absolufy-imports
-    rev: v0.2.1
+    rev: v0.2.2
     hooks:
     -   id: absolufy-imports
 ```
