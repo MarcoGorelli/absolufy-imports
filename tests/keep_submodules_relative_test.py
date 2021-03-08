@@ -41,8 +41,10 @@ def test_main(tmpdir):
     expected = (
         'from . import baz\n'
         'from .. import foo\n'
+        'from ..othersubdirectory import quox\n'
         'from mypackage.library2 import qux\n'
         'from mypackage import aaa\n'
+        'from datetime import dt\n'
     )
     assert result == expected
 
@@ -129,8 +131,10 @@ def test_custom_submodules(tmpdir):
     expected = (
         'from . import baz\n'
         'from .. import foo\n'
+        'from ..othersubdirectory import quox\n'
         'from mypackage.library2 import qux\n'
         'from mypackage import aaa\n'
+        'from datetime import dt\n'
     )
     assert result == expected
 
@@ -174,7 +178,9 @@ def test_custom_submodules_one_missing(tmpdir):
     expected = (
         'from mypackage.library1.subdirectory import baz\n'
         'from mypackage.library1 import foo\n'
+        'from mypackage.library1.othersubdirectory import quox\n'
         'from mypackage.library2 import qux\n'
         'from mypackage import aaa\n'
+        'from datetime import dt\n'
     )
     assert result == expected

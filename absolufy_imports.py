@@ -39,38 +39,23 @@ class Visitor(ast.NodeVisitor):
             parts: Sequence[str],
             submodules: Iterable[str],
             *,
-            keep_local_imports_relative: bool,
             keep_submodules_relative: bool,
     ) -> None:
         self.parts = parts
         self.submodules = submodules
-        self.keep_local_imports_relative = keep_local_imports_relative
         self.keep_submodules_relative = keep_submodules_relative
         self.to_replace: MutableMapping[int, Tuple[str, str]] = {}
 
     def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
         level = node.level
-        if (
-            not self.keep_local_imports_relative
-            and not self.keep_submodules_relative
-            and level == 0
-        ):
-            # Should be absolute, already is.
-            self.generic_visit(node)
-            return
+        is_absolute = level == 0
 
-        if self.keep_local_imports_relative and level == 1:
-            # Should be relative, and already is.
-            self.generic_visit(node)
-            return
-
-        should_be_relative = False
         if self.keep_submodules_relative:
             absolute_import = '.'.join(self.parts[:-level])
             file_submodule = _get_submodule(
                 '.'.join(self.parts), self.submodules,
             )
-            if level == 0:
+            if is_absolute:
                 assert node.module is not None  # can't have `from import`, but
                 # mypy doesn't know that
                 import_submodule = _get_submodule(node.module, self.submodules)
@@ -82,34 +67,10 @@ class Visitor(ast.NodeVisitor):
                 file_submodule is not None
                 and file_submodule == import_submodule
             )
+        else:
+            should_be_relative = False
 
-        if self.keep_submodules_relative and level > 0 and should_be_relative:
-            # should be relative within submodule, already is
-            self.generic_visit(node)
-            return
-
-        if (
-            self.keep_submodules_relative
-            and level == 0
-            and not should_be_relative
-        ):
-            # should be absolute, already is
-            self.generic_visit(node)
-            return
-
-        if self.keep_local_imports_relative:
-            should_be_relative = (
-                self.keep_local_imports_relative
-                and level == 0
-            )
-
-        if (
-            should_be_relative
-            and level == 0
-            and node.module is not None
-            and not node.module.startswith(self.parts[0])
-        ):
-            # Third-party import
+        if is_absolute ^ should_be_relative:
             self.generic_visit(node)
             return
 
@@ -136,7 +97,6 @@ class Visitor(ast.NodeVisitor):
             return
 
         absolute_import = '.'.join(self.parts[:-level])
-
         if node.module is None:
             # e.g. from . import b
             self.to_replace[
@@ -160,7 +120,6 @@ def absolute_imports(
         srcs: Iterable[str],
         submodules: Mapping[str, Iterable[str]],
         *,
-        keep_local_imports_relative: bool = False,
         keep_submodules_relative: bool = False,
 ) -> None:
     relative_paths = []
@@ -185,7 +144,6 @@ def absolute_imports(
     visitor = Visitor(
         relative_path.parts,
         submodules[src],
-        keep_local_imports_relative=keep_local_imports_relative,
         keep_submodules_relative=keep_submodules_relative,
     )
     visitor.visit(tree)
@@ -208,7 +166,6 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument('--application-directories', default='.:src')
     parser.add_argument('files', nargs='*')
-    parser.add_argument('--keep-local-imports-relative', action='store_true')
     parser.add_argument('--keep-submodules-relative', action='store_true')
     parser.add_argument('--submodules', required=False, type=json.loads)
     args = parser.parse_args(argv)
@@ -219,27 +176,27 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
     }
 
     submodules = defaultdict(list)
-    if args.keep_submodules_relative and not args.submodules:
-        existing_srcs = (src for src in srcs if os.path.exists(src))
-        packages = (
-            (src, pkg)
-            for src in existing_srcs
-            for pkg in os.listdir(src)
-            if os.path.isdir(pkg)
-        )
-        for src, package in packages:
-            for submodule in os.listdir(package):
-                submodules[src].append(f'{package}.{submodule}')
-    elif args.keep_submodules_relative:
-        for key, val in args.submodules.items():
-            submodules[str(Path(key).resolve())] = val
+    if args.keep_submodules_relative:
+        if not args.submodules:
+            existing_srcs = (src for src in srcs if os.path.exists(src))
+            packages = (
+                (src, pkg)
+                for src in existing_srcs
+                for pkg in os.listdir(src)
+                if os.path.isdir(pkg)
+            )
+            for src, package in packages:
+                for submodule in os.listdir(package):
+                    submodules[src].append(f'{package}.{submodule}')
+        else:
+            for key, val in args.submodules.items():
+                submodules[str(Path(key).resolve())] = val
 
     for file in args.files:
         absolute_imports(
             file,
             srcs,
             submodules,
-            keep_local_imports_relative=args.keep_local_imports_relative,
             keep_submodules_relative=args.keep_submodules_relative,
         )
 
