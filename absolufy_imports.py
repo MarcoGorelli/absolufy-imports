@@ -1,5 +1,6 @@
 import argparse
 import ast
+import json
 import os
 import re
 from collections import defaultdict
@@ -77,7 +78,10 @@ class Visitor(ast.NodeVisitor):
                 import_submodule = _get_submodule(
                     absolute_import, self.submodules,
                 )
-            should_be_relative = file_submodule == import_submodule
+            should_be_relative = (
+                file_submodule is not None
+                and file_submodule == import_submodule
+            )
 
         if self.keep_submodules_relative and level > 0 and should_be_relative:
             # should be relative within submodule, already is
@@ -206,6 +210,7 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
     parser.add_argument('files', nargs='*')
     parser.add_argument('--keep-local-imports-relative', action='store_true')
     parser.add_argument('--keep-submodules-relative', action='store_true')
+    parser.add_argument('--submodules', required=False, type=json.loads)
     args = parser.parse_args(argv)
 
     srcs = {
@@ -214,7 +219,7 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
     }
 
     submodules = defaultdict(list)
-    if args.keep_submodules_relative:
+    if args.keep_submodules_relative and not args.submodules:
         existing_srcs = (src for src in srcs if os.path.exists(src))
         packages = (
             (src, pkg)
@@ -225,6 +230,9 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
         for src, package in packages:
             for submodule in os.listdir(package):
                 submodules[src].append(f'{package}.{submodule}')
+    elif args.keep_submodules_relative:
+        for key, val in args.submodules.items():
+            submodules[str(Path(key).resolve())] = val
 
     for file in args.files:
         absolute_imports(
