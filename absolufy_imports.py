@@ -201,6 +201,7 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
                     submodules[src].append(f'{package}.{submodule}')
         else:
             for key, val in args.submodules.items():
+                assert isinstance(val, list)  # defensive check
                 submodules[str(Path(key).resolve())] = val
 
     for file in args.files:
