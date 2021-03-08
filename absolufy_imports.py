@@ -2,8 +2,10 @@ import argparse
 import ast
 import os
 import re
+from collections import defaultdict
 from pathlib import Path
 from typing import Iterable
+from typing import Mapping
 from typing import MutableMapping
 from typing import Optional
 from typing import Sequence
@@ -152,12 +154,13 @@ class Visitor(ast.NodeVisitor):
 def absolute_imports(
         file: str,
         srcs: Iterable[str],
-        submodules: Iterable[str],
+        submodules: Mapping[str, Iterable[str]],
         *,
         keep_local_imports_relative: bool = False,
         keep_submodules_relative: bool = False,
 ) -> None:
     relative_paths = []
+    possible_srcs = []
     path = Path(file).resolve()
     for i in srcs:
         try:
@@ -167,7 +170,9 @@ def absolute_imports(
             pass
         else:
             relative_paths.append(path_relative_to_i)
+            possible_srcs.append(i)
     relative_path = min(relative_paths, key=lambda x: len(x.parts))
+    src = possible_srcs[relative_paths.index(relative_path)]
 
     with open(file, encoding='utf-8') as fd:
         txt = fd.read()
@@ -175,7 +180,7 @@ def absolute_imports(
 
     visitor = Visitor(
         relative_path.parts,
-        submodules,
+        submodules[src],
         keep_local_imports_relative=keep_local_imports_relative,
         keep_submodules_relative=keep_submodules_relative,
     )
@@ -207,15 +212,18 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
         str(Path(i).resolve())
         for i in args.application_directories.split(':')
     }
-    existing_srcs = (os.listdir(src) for src in srcs if os.path.exists(src))
+    existing_srcs = (src for src in srcs if os.path.exists(src))
     packages = (
-        pkg for pkgs in existing_srcs for pkg in pkgs if os.path.isdir(pkg)
+        (src, pkg)
+        for src in existing_srcs
+        for pkg in os.listdir(src)
+        if os.path.isdir(pkg)
     )
-    submodules = {
-        f'{package}.{submodule}'
-        for package in packages
-        for submodule in os.listdir(package)
-    }
+
+    submodules = defaultdict(list)
+    for src, package in packages:
+        for submodule in os.listdir(package):
+            submodules[src].append(f'{package}.{submodule}')
 
     for file in args.files:
         absolute_imports(
