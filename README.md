@@ -15,11 +15,11 @@ A tool and pre-commit hook to automatically convert relative imports to absolute
 
 ## Installation
 
-```
-pip install absolufy-imports
+```console
+$ pip install absolufy-imports
 ```
 
-## Usage as a pre-commit hook
+## Usage as a pre-commit hook (recommended)
 
 See [pre-commit](https://github.com/pre-commit/pre-commit) for instructions
 
@@ -27,7 +27,7 @@ Sample `.pre-commit-config.yaml`:
 
 ```yaml
 -   repo: https://github.com/MarcoGorelli/absolufy-imports
-    rev: v0.2.2
+    rev: v0.3.0
     hooks:
     -   id: absolufy-imports
 ```
@@ -42,6 +42,10 @@ $ cat mypackage/myfile.py
 from mypackage import __version__
 ```
 
+## Configuration
+
+### Application directories
+
 If your package follows the popular `./src` layout, you can pass your application directories via `--application-directories`, e.g.
 
 ```console
@@ -53,6 +57,62 @@ from mypackage import __version__
 ```
 
 Multiple application directories should be comma-separated, e.g. `--application-directories .:src`. This is the same as in [reorder-python-imports](https://github.com/asottile/reorder_python_imports).
+
+### Only use relative imports
+
+Use the `--never` flag, e.g.
+
+```console
+$ cat mypackage/myfile.py
+from mypackage import __version__
+$ absolufy-imports mypackage/myfile.py --never
+$ cat mypackage/myfile.py
+from . import __version__
+```
+
+### Keep submodules relative
+
+Use the `--keep-submodules-relative` flag. By default, submodules are considered to be the first level of the directory. E.g. if you have
+
+```
+├── mypackage
+│   ├── library1
+│   │   ├── foo.py
+│   │   └── subdirectory
+│   │       ├── bar.py
+│   │       └── baz.py
+│   └── library2
+│       └── qux.py
+```
+
+and
+
+```console
+$ cat mypackage/library1/subdirectory/bar.py
+from mypackage.library1.subdirectory import baz
+from mypackage.library1 import foo
+from mypackage.library2 import qux
+```
+
+then you will get
+
+```console
+$ absolufy-imports mypackage/library1/subdirectory/bar.py --keep-submodules-relative
+$ cat mypackage/library1/subdirectory/bar.py
+from . import baz
+from .. import foo
+from mypackage.library2 import qux
+```
+
+To specify a custom list of submodules, you can use the `--submodules` flag, e.g.
+
+```console
+$ absolufy-imports mypackage/library1/subdirectory/bar.py \
+  --keep-submodules-relative \
+  --submodules '{".": ["mypackage.library1", "mypackage.library2"]}'
+```
+
+Note that they need to be in json format, and the keys should be the application directories.
 
 ## See also
 
