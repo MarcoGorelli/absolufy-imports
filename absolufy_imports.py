@@ -40,11 +40,13 @@ class Visitor(ast.NodeVisitor):
             submodules: Iterable[str],
             *,
             keep_submodules_relative: bool,
+            never: bool,
     ) -> None:
         self.parts = parts
         self.submodules = submodules
         self.keep_submodules_relative = keep_submodules_relative
         self.to_replace: MutableMapping[int, Tuple[str, str]] = {}
+        self.never = never
 
     def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
         level = node.level
@@ -66,10 +68,22 @@ class Visitor(ast.NodeVisitor):
                 file_submodule is not None
                 and file_submodule == import_submodule
             )
+        elif self.never:
+            should_be_relative = True
         else:
             should_be_relative = False
 
         if is_absolute ^ should_be_relative:
+            self.generic_visit(node)
+            return
+
+        if (
+            should_be_relative
+            and is_absolute
+            and node.module is not None
+            and not node.module.startswith(self.parts[0])
+        ):
+            # Third-party import
             self.generic_visit(node)
             return
 
@@ -115,6 +129,7 @@ def absolute_imports(
         submodules: Mapping[str, Iterable[str]],
         *,
         keep_submodules_relative: bool = False,
+        never: bool = False,
 ) -> None:
     relative_paths = []
     possible_srcs = []
@@ -139,6 +154,7 @@ def absolute_imports(
         relative_path.parts,
         submodules[src],
         keep_submodules_relative=keep_submodules_relative,
+        never=never,
     )
     visitor.visit(tree)
 
@@ -162,6 +178,7 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
     parser.add_argument('files', nargs='*')
     parser.add_argument('--keep-submodules-relative', action='store_true')
     parser.add_argument('--submodules', required=False, type=json.loads)
+    parser.add_argument('--never', action='store_true')
     args = parser.parse_args(argv)
 
     srcs = {
@@ -192,6 +209,7 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
             srcs,
             submodules,
             keep_submodules_relative=args.keep_submodules_relative,
+            never=args.never,
         )
 
 
