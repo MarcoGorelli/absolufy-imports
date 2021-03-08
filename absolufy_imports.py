@@ -81,13 +81,17 @@ def absolute_imports(
         *,
         keep_local_imports_relative: bool = False,
 ) -> None:
-    relative_path = Path(file)
+    relative_paths = []
+    path = Path(file).resolve()
     for i in srcs:
         try:
-            relative_path = relative_path.resolve().relative_to(i)
+            path_relative_to_i = path.relative_to(i)
         except ValueError:
             # `relative_path` can't be resolved relative to `i`
             pass
+        else:
+            relative_paths.append(path_relative_to_i)
+    relative_path = min(relative_paths, key=lambda x: len(x.parts))
 
     with open(file, encoding='utf-8') as fd:
         txt = fd.read()
