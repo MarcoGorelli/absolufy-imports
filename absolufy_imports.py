@@ -56,8 +56,7 @@ class Visitor(ast.NodeVisitor):
                 '.'.join(self.parts), self.submodules,
             )
             if is_absolute:
-                assert node.module is not None  # can't have `from import`, but
-                # mypy doesn't know that
+                assert node.module is not None  # help mypy
                 import_submodule = _get_submodule(node.module, self.submodules)
             else:
                 import_submodule = _get_submodule(
@@ -75,17 +74,13 @@ class Visitor(ast.NodeVisitor):
             return
 
         if should_be_relative:
-            assert node.module is not None  # If the import
-            # was already relative, we'd have returned already.
-            # So it must be absolute, meaning that node.module can't
-            # be None.
+            assert node.module is not None  # help mypy
             depth = _find_relative_depth(self.parts, node.module)
             inverse_depth = len(self.parts) - depth
             if node.module == '.'.join(self.parts[:depth]):
-                # e.g. from a.b import c -> import . import c
                 n_dots = inverse_depth
             else:
-                # e.g. from a.b.c import d -> from .. import c
+                # e.g. from a.b.c import d -> from ..c import d
                 n_dots = inverse_depth - 1
             replacement = f'\\1{"."*n_dots}'
 
