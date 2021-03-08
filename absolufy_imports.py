@@ -212,18 +212,19 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
         str(Path(i).resolve())
         for i in args.application_directories.split(':')
     }
-    existing_srcs = (src for src in srcs if os.path.exists(src))
-    packages = (
-        (src, pkg)
-        for src in existing_srcs
-        for pkg in os.listdir(src)
-        if os.path.isdir(pkg)
-    )
 
     submodules = defaultdict(list)
-    for src, package in packages:
-        for submodule in os.listdir(package):
-            submodules[src].append(f'{package}.{submodule}')
+    if args.keep_submodules_relative:
+        existing_srcs = (src for src in srcs if os.path.exists(src))
+        packages = (
+            (src, pkg)
+            for src in existing_srcs
+            for pkg in os.listdir(src)
+            if os.path.isdir(pkg)
+        )
+        for src, package in packages:
+            for submodule in os.listdir(package):
+                submodules[src].append(f'{package}.{submodule}')
 
     for file in args.files:
         absolute_imports(
