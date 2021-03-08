@@ -49,9 +49,9 @@ class Visitor(ast.NodeVisitor):
     def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
         level = node.level
         is_absolute = level == 0
+        absolute_import = '.'.join(self.parts[:-level])
 
         if self.keep_submodules_relative:
-            absolute_import = '.'.join(self.parts[:-level])
             file_submodule = _get_submodule(
                 '.'.join(self.parts), self.submodules,
             )
@@ -91,7 +91,6 @@ class Visitor(ast.NodeVisitor):
             self.generic_visit(node)
             return
 
-        absolute_import = '.'.join(self.parts[:-level])
         if node.module is None:
             # e.g. from . import b
             self.to_replace[
