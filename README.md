@@ -3,7 +3,7 @@
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/MarcoGorelli/absolufy-imports/main.svg)](https://results.pre-commit.ci/latest/github/MarcoGorelli/absolufy-imports/main)
 
 absolufy-imports
-===========
+================
 
 A tool and pre-commit hook to automatically convert relative imports to absolute.
 
@@ -69,51 +69,3 @@ $ absolufy-imports mypackage/myfile.py --never
 $ cat mypackage/myfile.py
 from . import __version__
 ```
-
-### Keep submodules relative
-
-Use the `--keep-submodules-relative` flag. By default, submodules are considered to be the first level of the directory. E.g. if you have
-
-```
-├── mypackage
-│   ├── library1
-│   │   ├── foo.py
-│   │   └── subdirectory
-│   │       ├── bar.py
-│   │       └── baz.py
-│   └── library2
-│       └── qux.py
-```
-
-and
-
-```console
-$ cat mypackage/library1/subdirectory/bar.py
-from mypackage.library1.subdirectory import baz
-from mypackage.library1 import foo
-from mypackage.library2 import qux
-```
-
-then you will get
-
-```console
-$ absolufy-imports mypackage/library1/subdirectory/bar.py --keep-submodules-relative
-$ cat mypackage/library1/subdirectory/bar.py
-from . import baz
-from .. import foo
-from mypackage.library2 import qux
-```
-
-To specify a custom list of submodules, you can use the `--submodules` flag, e.g.
-
-```console
-$ absolufy-imports mypackage/library1/subdirectory/bar.py \
-  --keep-submodules-relative \
-  --submodules '{".": ["mypackage.library1", "mypackage.library2"]}'
-```
-
-Note that they need to be in json format, and the keys should be the application directories.
-
-## See also
-
-Check out [pyupgrade](https://github.com/asottile/pyupgrade), which I learned a lot from when writing this.
