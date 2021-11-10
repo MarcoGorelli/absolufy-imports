@@ -37,7 +37,9 @@ Sample `.pre-commit-config.yaml`:
 ```console
 $ cat mypackage/myfile.py
 from . import __version__
+
 $ absolufy-imports mypackage/myfile.py
+
 $ cat mypackage/myfile.py
 from mypackage import __version__
 ```
@@ -51,7 +53,9 @@ If your package follows the popular `./src` layout, you can pass your applicatio
 ```console
 $ cat src/mypackage/myfile.py
 from . import __version__
+
 $ absolufy-imports src/mypackage/myfile.py --application-directories src
+
 $ cat src/mypackage/myfile.py
 from mypackage import __version__
 ```
@@ -65,7 +69,9 @@ Use the `--never` flag, e.g.
 ```console
 $ cat mypackage/myfile.py
 from mypackage import __version__
+
 $ absolufy-imports mypackage/myfile.py --never
+
 $ cat mypackage/myfile.py
 from . import __version__
 ```
