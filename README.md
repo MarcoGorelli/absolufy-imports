@@ -36,12 +36,11 @@ Sample `.pre-commit-config.yaml`:
 
 ```console
 $ cat mypackage/myfile.py
-from . import __version__
+```
 
-$ absolufy-imports mypackage/myfile.py
-
-$ cat mypackage/myfile.py
-from mypackage import __version__
+```diff
+- from . import __version__
++ from mypackage import __version__
 ```
 
 ## Configuration
@@ -52,12 +51,11 @@ If your package follows the popular `./src` layout, you can pass your applicatio
 
 ```console
 $ cat src/mypackage/myfile.py
-from . import __version__
+```
 
-$ absolufy-imports src/mypackage/myfile.py --application-directories src
-
-$ cat src/mypackage/myfile.py
-from mypackage import __version__
+```diff
+- from . import __version__
++ from mypackage import __version__
 ```
 
 Multiple application directories should be comma-separated, e.g. `--application-directories .:src`. This is the same as in [reorder-python-imports](https://github.com/asottile/reorder_python_imports).
@@ -68,10 +66,9 @@ Use the `--never` flag, e.g.
 
 ```console
 $ cat mypackage/myfile.py
-from mypackage import __version__
+```
 
-$ absolufy-imports mypackage/myfile.py --never
-
-$ cat mypackage/myfile.py
-from . import __version__
+```diff
+- from mypackage import __version__
++ from . import __version__
 ```
