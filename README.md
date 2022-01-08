@@ -35,7 +35,7 @@ Sample `.pre-commit-config.yaml`:
 ## Command-line example
 
 ```console
-$ cat mypackage/myfile.py
+$ absolufy-imports mypackage/myfile.py
 ```
 
 ```diff
@@ -50,7 +50,7 @@ $ cat mypackage/myfile.py
 If your package follows the popular `./src` layout, you can pass your application directories via `--application-directories`, e.g.
 
 ```console
-$ cat src/mypackage/myfile.py
+$ absolufy-imports src/mypackage/myfile.py --application-directories src
 ```
 
 ```diff
@@ -65,7 +65,7 @@ Multiple application directories should be colon-separated, e.g. `--application-
 Use the `--never` flag, e.g.
 
 ```console
-$ cat mypackage/myfile.py
+$ absolufy-imports mypackage/myfile.py --never
 ```
 
 ```diff
