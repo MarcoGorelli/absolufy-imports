@@ -1,12 +1,9 @@
 import argparse
 import ast
-import json
 import os
 import re
-from collections import defaultdict
 from pathlib import Path
 from typing import Iterable
-from typing import Mapping
 from typing import MutableMapping
 from typing import Optional
 from typing import Sequence
@@ -14,37 +11,22 @@ from typing import Tuple
 
 
 def _find_relative_depth(parts: Sequence[str], module: str) -> int:
-    depth = 0
-    for n, _ in enumerate(parts, start=1):
-        if module.startswith('.'.join(parts[:n])):
-            depth += 1
-            continue
-    return depth
-
-
-def _get_submodule(path: str, submodules: Iterable[str]) -> Optional[str]:
-    submodule: Optional[str]
-    for i in submodules:
-        if path.startswith(i):
-            submodule = i
-            break
-    else:
-        submodule = None
-    return submodule
+    return sum(
+        bool(module.startswith('.'.join(parts[:n])))
+        for n, _ in enumerate(parts, start=1)
+    )
 
 
 class Visitor(ast.NodeVisitor):
     def __init__(
             self,
             parts: Sequence[str],
-            submodules: Iterable[str],
+            srcs: Iterable[str],
             *,
-            keep_submodules_relative: bool,
             never: bool,
     ) -> None:
         self.parts = parts
-        self.submodules = submodules
-        self.keep_submodules_relative = keep_submodules_relative
+        self.srcs = srcs
         self.to_replace: MutableMapping[int, Tuple[str, str]] = {}
         self.never = never
 
@@ -53,42 +35,26 @@ class Visitor(ast.NodeVisitor):
         is_absolute = level == 0
         absolute_import = '.'.join(self.parts[:-level])
 
-        if self.keep_submodules_relative:
-            file_submodule = _get_submodule(
-                '.'.join(self.parts), self.submodules,
-            )
-            if is_absolute:
-                assert node.module is not None  # help mypy
-                import_submodule = _get_submodule(node.module, self.submodules)
-            else:
-                import_submodule = _get_submodule(
-                    absolute_import, self.submodules,
-                )
-            should_be_relative = (
-                file_submodule is not None
-                and file_submodule == import_submodule
-            )
-        elif self.never:
-            should_be_relative = True
-        else:
-            should_be_relative = False
-
+        should_be_relative = bool(self.never)
         if is_absolute ^ should_be_relative:
             self.generic_visit(node)
             return
 
-        if (
-            should_be_relative
-            and is_absolute
-            and node.module is not None
-            and not node.module.startswith(self.parts[0])
-        ):
-            # Third-party import
-            self.generic_visit(node)
-            return
+        def is_python_file_or_dir(path: str) -> bool:
+            return os.path.exists(path+'.py') or os.path.isdir(path)
 
         if should_be_relative:
             assert node.module is not None  # help mypy
+            if not any(
+                is_python_file_or_dir(
+                    os.path.join(
+                    src, *node.module.split('.'),
+                    ),
+                )
+                for src in self.srcs
+            ):
+                # Can't convert to relative, might be third-party
+                return
             depth = _find_relative_depth(self.parts, node.module)
             inverse_depth = len(self.parts) - depth
             if node.module == '.'.join(self.parts[:depth]):
@@ -126,92 +92,83 @@ class Visitor(ast.NodeVisitor):
 def absolute_imports(
         file: str,
         srcs: Iterable[str],
-        submodules: Mapping[str, Iterable[str]],
         *,
-        keep_submodules_relative: bool = False,
         never: bool = False,
-) -> None:
+) -> int:
     relative_paths = []
     possible_srcs = []
     path = Path(file).resolve()
-    for i in srcs:
+    for src in srcs:
         try:
-            path_relative_to_i = path.relative_to(i)
+            path_relative_to_i = path.relative_to(src)
         except ValueError:
             # `relative_path` can't be resolved relative to `i`
             pass
         else:
             relative_paths.append(path_relative_to_i)
-            possible_srcs.append(i)
+            possible_srcs.append(src)
+    if not relative_paths:
+        raise ValueError(
+            f'{file} can\'t be resolved relative to the current directory.\n'
+            'Either run absolufy-imports from the project root, or pass\n'
+            '--application-directories',
+        )
     relative_path = min(relative_paths, key=lambda x: len(x.parts))
-    src = possible_srcs[relative_paths.index(relative_path)]
 
-    with open(file, encoding='utf-8') as fd:
-        txt = fd.read()
-    tree = ast.parse(txt)
+    with open(file, 'rb') as fb:
+        contents_bytes = fb.read()
+    try:
+        contents_text = contents_bytes.decode()
+    except UnicodeDecodeError:
+        print(f'{file} is non-utf-8 (not supported)')
+        return 1
+    try:
+        tree = ast.parse(contents_text)
+    except SyntaxError:
+        return 0
 
     visitor = Visitor(
         relative_path.parts,
-        submodules[src],
-        keep_submodules_relative=keep_submodules_relative,
+        srcs,
         never=never,
     )
     visitor.visit(tree)
 
     if not visitor.to_replace:
-        return
+        return 0
 
     newlines = []
-    with open(file, encoding='utf-8') as fd:
-        for lineno, line in enumerate(fd, start=1):
-            if lineno in visitor.to_replace:
-                re1, re2 = visitor.to_replace[lineno]
-                line = re.sub(re1, re2, line)
-            newlines.append(line)
-    with open(file, 'w', encoding='utf-8') as fd:
+    for lineno, line in enumerate(
+        contents_text.splitlines(keepends=True), start=1,
+    ):
+        if lineno in visitor.to_replace:
+            re1, re2 = visitor.to_replace[lineno]
+            line = re.sub(re1, re2, line)
+        newlines.append(line)
+    with open(file, 'w', encoding='utf-8', newline='') as fd:
         fd.write(''.join(newlines))
+    return 1
 
 
-def main(argv: Optional[Sequence[str]] = None) -> None:
+def main(argv: Optional[Sequence[str]] = None) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument('--application-directories', default='.:src')
     parser.add_argument('files', nargs='*')
-    parser.add_argument('--keep-submodules-relative', action='store_true')
-    parser.add_argument('--submodules', required=False, type=json.loads)
     parser.add_argument('--never', action='store_true')
     args = parser.parse_args(argv)
 
-    srcs = {
+    srcs = [
         str(Path(i).resolve())
         for i in args.application_directories.split(':')
-    }
-
-    submodules = defaultdict(list)
-    if args.keep_submodules_relative:
-        if not args.submodules:
-            existing_srcs = (src for src in srcs if os.path.exists(src))
-            packages = (
-                (src, pkg)
-                for src in existing_srcs
-                for pkg in os.listdir(src)
-                if os.path.isdir(pkg)
-            )
-            for src, package in packages:
-                for submodule in os.listdir(package):
-                    submodules[src].append(f'{package}.{submodule}')
-        else:
-            for key, val in args.submodules.items():
-                assert isinstance(val, list)  # defensive check
-                submodules[str(Path(key).resolve())] = val
-
+    ]
+    ret = 0
     for file in args.files:
-        absolute_imports(
+        ret |= absolute_imports(
             file,
             srcs,
-            submodules,
-            keep_submodules_relative=args.keep_submodules_relative,
             never=args.never,
         )
+    return ret
 
 
 if __name__ == '__main__':
