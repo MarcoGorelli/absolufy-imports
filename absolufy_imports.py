@@ -47,15 +47,15 @@ class Visitor(ast.NodeVisitor):
             assert node.module is not None  # help mypy
             if not any(
                 is_python_file_or_dir(
-                    os.path.join(
-                    src, *node.module.split('.'),
-                    ),
-                )
-                for src in self.srcs
+                    os.path.join(src, *node.module.split('.')),
+                ) for src in self.srcs
             ):
                 # Can't convert to relative, might be third-party
                 return
             depth = _find_relative_depth(self.parts, node.module)
+            if depth == 0:
+                # don't attempt relative import beyond top-level package
+                return
             inverse_depth = len(self.parts) - depth
             if node.module == '.'.join(self.parts[:depth]):
                 n_dots = inverse_depth
