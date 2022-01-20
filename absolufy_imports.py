@@ -11,10 +11,13 @@ from typing import Tuple
 
 
 def _find_relative_depth(parts: Sequence[str], module: str) -> int:
-    return sum(
-        bool(module.startswith('.'.join(parts[:n])))
-        for n, _ in enumerate(parts, start=1)
-    )
+    depth = 0
+    for n, _ in enumerate(parts, start=1):
+        if module.startswith('.'.join(parts[:n])):
+            depth += 1
+        else:
+            break
+    return depth
 
 
 class Visitor(ast.NodeVisitor):
