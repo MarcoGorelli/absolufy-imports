@@ -19,7 +19,7 @@ A tool and pre-commit hook to automatically convert relative imports to absolute
 $ pip install absolufy-imports
 ```
 
-## Usage as a pre-commit hook (recommended)
+## Usage as a pre-commit hook
 
 See [pre-commit](https://github.com/pre-commit/pre-commit) for instructions
 
