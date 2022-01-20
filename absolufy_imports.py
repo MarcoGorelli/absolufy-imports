@@ -146,9 +146,17 @@ def absolute_imports(
     relative_path = min(relative_paths, key=lambda x: len(x.parts))
     src = possible_srcs[relative_paths.index(relative_path)]
 
-    with open(file, encoding='utf-8') as fd:
-        txt = fd.read()
-    tree = ast.parse(txt)
+    encoding_attempts = ['utf-8', 'utf-8-sig']
+    for encoding in encoding_attempts:
+        try:
+            with open(file, encoding=encoding, newline='') as fd:
+                txt = fd.read()
+            tree = ast.parse(txt)
+            break
+        except (SyntaxError, ValueError):
+            pass
+    else:
+        raise ValueError(f'cannot parse {file}')
 
     visitor = Visitor(
         relative_path.parts,
@@ -162,13 +170,17 @@ def absolute_imports(
         return
 
     newlines = []
-    with open(file, encoding='utf-8') as fd:
+    with open(file, encoding=encoding) as fd:
         for lineno, line in enumerate(fd, start=1):
             if lineno in visitor.to_replace:
                 re1, re2 = visitor.to_replace[lineno]
                 line = re.sub(re1, re2, line)
             newlines.append(line)
-    with open(file, 'w', encoding='utf-8') as fd:
+
+    # distinguish line break type from source file (CRLF vs LF)
+    newline = '\r\n' if '\r\n' in txt else '\n'
+
+    with open(file, 'w', encoding=encoding, newline=newline) as fd:
         fd.write(''.join(newlines))
 
 
