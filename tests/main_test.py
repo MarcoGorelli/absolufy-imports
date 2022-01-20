@@ -1,6 +1,8 @@
 import os
 import shutil
 
+import pytest
+
 from absolufy_imports import main
 
 
@@ -112,3 +114,31 @@ def test_noop(tmpdir):
         expected = fd.read()
 
     assert result == expected
+
+
+def test_bom_file():
+    main(
+        (
+            '--application-directories',
+            '.',
+            os.path.join('tests', 'data', 'bom.py'),
+        ),
+    )
+
+
+def test_non_utf8_file(capsys):
+    path = os.path.join('tests', 'data', 'non_utf8.py')
+    assert main((path,)) == 1
+    out, _ = capsys.readouterr()
+    assert (out == f'{path} is non-utf-8 (not supported)\n')
+
+
+def test_unresolvable_dir(tmpdir, capsys):
+    f = tmpdir.join('f.py')
+    f.write_binary('# -*- coding: cp1252 -*-\nx = €\n'.encode('cp1252'))
+    with pytest.raises(ValueError):
+        main(
+            (
+                f.strpath,
+            ),
+        )
