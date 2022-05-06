@@ -2,13 +2,13 @@ import argparse
 import ast
 import os
 import re
-from numbers import Real
 from pathlib import Path
 from typing import Iterable
 from typing import MutableMapping
 from typing import Optional
 from typing import Sequence
 from typing import Tuple
+from typing import Union
 
 
 def _find_relative_depth(parts: Sequence[str], module: str) -> int:
@@ -28,7 +28,7 @@ class Visitor(ast.NodeVisitor):
         srcs: Iterable[str],
         *,
         never: bool,
-        max_dots: Real,
+        max_dots: Union[float, int],
     ) -> None:
         self.parts = parts
         self.srcs = srcs
@@ -41,7 +41,7 @@ class Visitor(ast.NodeVisitor):
         is_absolute = level == 0
         absolute_import = '.'.join(self.parts[:-level])
 
-        should_be_relative = bool(self.never)
+        should_be_relative = self.never and level <= self.max_dots
         if is_absolute ^ should_be_relative:
             self.generic_visit(node)
             return
@@ -103,7 +103,7 @@ def absolute_imports(
     srcs: Iterable[str],
     *,
     never: bool = False,
-    max_dots: Real = float('inf'),
+    max_dots: Union[float, int] = float('inf'),
 ) -> int:
     relative_paths = []
     possible_srcs = []
