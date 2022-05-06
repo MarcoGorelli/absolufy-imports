@@ -71,12 +71,12 @@ class Visitor(ast.NodeVisitor):
                     n_dots = inverse_depth - 1
 
                 replacement = f'\\1{"."*n_dots}'
-    
+
                 self.to_replace[node.lineno] = (
                     rf'(from\s+){".".join(self.parts[:depth])}',
                     replacement,
                 )
-                
+
             self.generic_visit(node)
             return
 
