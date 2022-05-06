@@ -2,6 +2,7 @@ import argparse
 import ast
 import os
 import re
+from numbers import Real
 from pathlib import Path
 from typing import Iterable
 from typing import MutableMapping
@@ -22,16 +23,18 @@ def _find_relative_depth(parts: Sequence[str], module: str) -> int:
 
 class Visitor(ast.NodeVisitor):
     def __init__(
-            self,
-            parts: Sequence[str],
-            srcs: Iterable[str],
-            *,
-            never: bool,
+        self,
+        parts: Sequence[str],
+        srcs: Iterable[str],
+        *,
+        never: bool,
+        max_dots: Real,
     ) -> None:
         self.parts = parts
         self.srcs = srcs
         self.to_replace: MutableMapping[int, Tuple[str, str]] = {}
         self.never = never
+        self.max_dots = max_dots
 
     def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
         level = node.level
@@ -60,17 +63,20 @@ class Visitor(ast.NodeVisitor):
                 # don't attempt relative import beyond top-level package
                 return
             inverse_depth = len(self.parts) - depth
-            if node.module == '.'.join(self.parts[:depth]):
-                n_dots = inverse_depth
-            else:
-                # e.g. from a.b.c import d -> from ..c import d
-                n_dots = inverse_depth - 1
-            replacement = f'\\1{"."*n_dots}'
+            if inverse_depth <= self.max_dots:
+                if node.module == '.'.join(self.parts[:depth]):
+                    n_dots = inverse_depth
+                else:
+                    # e.g. from a.b.c import d -> from ..c import d
+                    n_dots = inverse_depth - 1
 
-            self.to_replace[node.lineno] = (
-                rf'(from\s+){".".join(self.parts[:depth])}',
-                replacement,
-            )
+                replacement = f'\\1{"."*n_dots}'
+    
+                self.to_replace[node.lineno] = (
+                    rf'(from\s+){".".join(self.parts[:depth])}',
+                    replacement,
+                )
+                
             self.generic_visit(node)
             return
 
@@ -93,10 +99,11 @@ class Visitor(ast.NodeVisitor):
 
 
 def absolute_imports(
-        file: str,
-        srcs: Iterable[str],
-        *,
-        never: bool = False,
+    file: str,
+    srcs: Iterable[str],
+    *,
+    never: bool = False,
+    max_dots: Real = float('inf'),
 ) -> int:
     relative_paths = []
     possible_srcs = []
@@ -134,6 +141,7 @@ def absolute_imports(
         relative_path.parts,
         srcs,
         never=never,
+        max_dots=max_dots,
     )
     visitor.visit(tree)
 
@@ -158,6 +166,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser.add_argument('--application-directories', default='.:src')
     parser.add_argument('files', nargs='*')
     parser.add_argument('--never', action='store_true')
+    parser.add_argument('--max-dots', type=int, default=float('inf'))
     args = parser.parse_args(argv)
 
     srcs = [
@@ -170,6 +179,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             file,
             srcs,
             never=args.never,
+            max_dots=args.max_dots,
         )
     return ret
 
