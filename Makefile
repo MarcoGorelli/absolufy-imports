@@ -1,5 +1,5 @@
 run-tests:
-	pytest tests/test_*
+	pytest tests/*_test.py
 
 install:
 	pip3 uninstall -y absolufy_imports
