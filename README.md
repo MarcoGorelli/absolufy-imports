@@ -72,3 +72,12 @@ $ absolufy-imports mypackage/myfile.py --never
 - from mypackage import __version__
 + from . import __version__
 ```
+
+
+### Absolute imports for specified package
+
+Using the below command you just need to specify the package name on which: `absolufy-imports` - will `walk` and convert relative import paths to absolute import python paths.
+
+```console
+$ absolufy-imports --package your_package_name
+```
