@@ -3,7 +3,7 @@ def func3(param1: str, param2: dict):
 
 
 async def cofunc3():
-    return "ok"
+    return 'ok'
 
 
 class Class3:
@@ -11,4 +11,4 @@ class Class3:
         pass
 
     def method3(self):
-        return "classic response"
+        return 'classic response'

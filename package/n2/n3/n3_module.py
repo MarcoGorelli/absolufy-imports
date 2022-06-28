@@ -10,7 +10,7 @@ def func4(param1: str, param2: dict):
 
 
 async def cofunc4():
-    return "ok"
+    return 'ok'
 
 
 class Class4:
@@ -18,4 +18,4 @@ class Class4:
         pass
 
     def method4(self):
-        return "classic response"
+        return 'classic response'
