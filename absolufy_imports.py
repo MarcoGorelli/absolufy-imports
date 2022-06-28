@@ -5,7 +5,6 @@ import re
 import warnings
 from functools import wraps
 from pathlib import Path
-from typing import Union
 from typing import Callable
 from typing import Iterable
 from typing import List
@@ -18,7 +17,7 @@ from typing import Tuple
 def _find_relative_depth(parts: Sequence[str], module: str) -> int:
     depth = 0
     for n, _ in enumerate(parts, start=1):
-        if module.startswith(".".join(parts[:n])):
+        if module.startswith('.'.join(parts[:n])):
             depth += 1
         else:
             break
@@ -44,9 +43,10 @@ class Visitor(ast.NodeVisitor):
         level = node.level
         is_absolute = level == 0
         if self.package_name is not None:
-            absolute_import = self.package_name + "." + ".".join(self.parts[:-level])
+            absolute_import = self.package_name + \
+                '.' + '.'.join(self.parts[:-level])
         else:
-            absolute_import = ".".join(self.parts[:-level])
+            absolute_import = '.'.join(self.parts[:-level])
 
         should_be_relative = bool(self.never)
         if is_absolute ^ should_be_relative:
@@ -54,13 +54,13 @@ class Visitor(ast.NodeVisitor):
             return
 
         def is_python_file_or_dir(path: str) -> bool:
-            return os.path.exists(path + ".py") or os.path.isdir(path)
+            return os.path.exists(path + '.py') or os.path.isdir(path)
 
         if should_be_relative:
             assert node.module is not None  # help mypy
             if not any(
                 is_python_file_or_dir(
-                    os.path.join(src, *node.module.split(".")),
+                    os.path.join(src, *node.module.split('.')),
                 )
                 for src in self.srcs
             ):
@@ -71,7 +71,7 @@ class Visitor(ast.NodeVisitor):
                 # don't attempt relative import beyond top-level package
                 return
             inverse_depth = len(self.parts) - depth
-            if node.module == ".".join(self.parts[:depth]):
+            if node.module == '.'.join(self.parts[:depth]):
                 n_dots = inverse_depth
             else:
                 # e.g. from a.b.c import d -> from ..c import d
@@ -89,14 +89,14 @@ class Visitor(ast.NodeVisitor):
             # e.g. from . import b
             self.to_replace[node.lineno] = (
                 rf'(from\s+){"."*level}\s*',
-                f"\\1{absolute_import} ",
+                f'\\1{absolute_import} ',
             )
         else:
             # e.g. from .b import c
             module = node.module
             self.to_replace[node.lineno] = (
                 rf'(from\s+){"."*level}{module}',
-                f"\\1{absolute_import}.{module}",
+                f'\\1{absolute_import}.{module}',
             )
 
         self.generic_visit(node)
@@ -124,17 +124,17 @@ def absolute_imports(
     if not relative_paths:
         raise ValueError(
             f"{file} can't be resolved relative to the current directory.\n"
-            "Either run absolufy-imports from the project root, or pass\n"
-            "--application-directories",
+            'Either run absolufy-imports from the project root, or pass\n'
+            '--application-directories',
         )
     relative_path = min(relative_paths, key=lambda x: len(x.parts))
 
-    with open(file, "rb") as fb:
+    with open(file, 'rb') as fb:
         contents_bytes = fb.read()
     try:
         contents_text = contents_bytes.decode()
     except UnicodeDecodeError:
-        print(f"{file} is non-utf-8 (not supported)")
+        print(f'{file} is non-utf-8 (not supported)')
         return 1
     try:
         tree = ast.parse(contents_text)
@@ -161,25 +161,25 @@ def absolute_imports(
             re1, re2 = visitor.to_replace[lineno]
             line = re.sub(re1, re2, line)
         newlines.append(line)
-    with open(file, "w", encoding="utf-8", newline="") as fd:
-        fd.write("".join(newlines))
+    with open(file, 'w', encoding='utf-8', newline='') as fd:
+        fd.write(''.join(newlines))
     return 1
 
 
 def get_module_paths(package_name: str) -> List[str]:
 
-    package_path = os.path.join("./", package_name)
+    package_path = os.path.join('./', package_name)
 
     file_modules = []
     for root, _, files in os.walk(package_path):
 
-        if root.endswith("__pycache__"):
+        if root.endswith('__pycache__'):
             continue
 
         files = [
             os.path.join(root, f)
             for f in files
-            if f.endswith(".py") and f != "__init__.py"
+            if f.endswith('.py') and f != '__init__.py'
         ]
 
         file_modules.extend(files)
@@ -187,22 +187,25 @@ def get_module_paths(package_name: str) -> List[str]:
     return file_modules
 
 
-def ignore_warnings(f: Callable[[str], int]) -> Callable:
+def ignore_warnings(f: Callable[[str], List[str]]) -> Callable[[str], List[str]]:
     @wraps(f)
-    def inner(*args: tuple, **kwargs: dict) -> int:
+    def inner(*args: tuple, **kwargs: dict) -> List[str]:  # type: ignore
         with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("ignore")
-            response = f(*args, **kwargs)
+            warnings.simplefilter('ignore')
+            response = f(*args, **kwargs)  # type: ignore
         return response
 
-    return inner
+    return inner  # type: ignore
 
 
 @ignore_warnings
 def to_absolute_imports(package_name: str) -> List[str]:
 
     srcs = [str(Path(i).resolve()) for i in [package_name]]
-    files = [str(Path(file).resolve()) for file in get_module_paths(package_name)]
+    files = [
+        str(Path(file).resolve())
+        for file in get_module_paths(package_name)
+    ]
 
     for file in files:
         absolute_imports(file, srcs, package_name=package_name)
@@ -212,10 +215,10 @@ def to_absolute_imports(package_name: str) -> List[str]:
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--package")
-    parser.add_argument("--application-directories", default=".:src")
-    parser.add_argument("files", nargs="*")
-    parser.add_argument("--never", action="store_true")
+    parser.add_argument('--package')
+    parser.add_argument('--application-directories', default='.:src')
+    parser.add_argument('files', nargs='*')
+    parser.add_argument('--never', action='store_true')
     args = parser.parse_args(argv)
 
     ret = 0
@@ -226,7 +229,10 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         except:
             return 1
 
-    srcs = [str(Path(i).resolve()) for i in args.application_directories.split(":")]
+    srcs = [
+        str(Path(i).resolve())
+        for i in args.application_directories.split(':')
+    ]
     for file in args.files:
         ret |= absolute_imports(
             file,
@@ -238,5 +244,5 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     return ret
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
