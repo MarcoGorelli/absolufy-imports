@@ -23,7 +23,7 @@ def test_get_module_paths(tmpdir):
 
     os.chdir(str(tmpdir))
 
-    module_paths = get_module_paths(package_name="package")
+    module_paths = get_module_paths(package_name='package')
 
     assert len(module_paths) == 2
 
