@@ -1,55 +1,91 @@
 import os
 import shutil
 
-from absolufy_imports import main, get_module_paths, to_absolute_imports
+from absolufy_imports import get_module_paths
+from absolufy_imports import main
+from absolufy_imports import to_absolute_imports
 
 
 # pytest -s -v tests/package_for_conversion_test.py
 
 
 # pytest -s -v tests/package_for_conversion_test.py::test_get_module_paths
-def test_get_module_paths():
+def test_get_module_paths(tmpdir):
+
+    cwd = os.getcwd()
+    assert os.path.isdir(tmpdir)
+
+    srcpkgpath = os.path.join(cwd, "tests", "data", "package")
+    assert os.path.isdir(srcpkgpath)
+    pkgpath = os.path.join(tmpdir, "package")
+    shutil.copytree(srcpkgpath, pkgpath)
+    assert os.path.exists(pkgpath)
+
+    os.chdir(str(tmpdir))
 
     module_paths = get_module_paths(package_name="package")
 
-    assert sorted(module_paths) == sorted(
-        ["./package/n2/n2_module.py", "./package/n2/n3/n3_module.py"]
-    )
+    assert len(module_paths) == 2
 
     for path in module_paths:
         assert os.path.exists(path)
 
+    shutil.rmtree(pkgpath)
+    os.chdir(cwd)
+
 
 # pytest -s -v tests/package_for_conversion_test.py::test_to_absolute_imports
-def test_to_absolute_imports():
+def test_to_absolute_imports(tmpdir):
 
-    shutil.copytree("./package", "./pkg")
+    cwd = os.getcwd()
+    srcpkgpath = os.path.join(cwd, "tests", "data", "package")
+    pkgpath = os.path.join(tmpdir, "package")
+    shutil.copytree(srcpkgpath, pkgpath)
+    assert os.path.exists(pkgpath)
 
-    to_absolute_imports("pkg")
+    os.chdir(str(tmpdir))
 
-    with open("./pkg/n2/n3/n3_module.py", "r") as f:
-        flines = f.readlines()
+    module_paths = to_absolute_imports("package")
 
-    assert "from pkg.n2.n2_module import func3" == flines[0].strip()
+    assert len(module_paths) == 2
 
-    shutil.rmtree("./pkg")
+    for path in module_paths:
+        assert os.path.exists(path)
+        if path.endswith("n3_module.py"):
+            with open(path, "r") as f:
+                flines = f.readlines()
+            assert "from package.n2.n2_module import func3" == flines[0].strip()
+
+    shutil.rmtree(pkgpath)
+    os.chdir(cwd)
 
 
 # pytest -s -v tests/package_for_conversion_test.py::test_main_with_package_flag
-def test_main_with_package_flag():
+def test_main_with_package_flag(tmpdir):
 
-    shutil.copytree("./package", "./pkg")
+    cwd = os.getcwd()
+    srcpkgpath = os.path.join(cwd, "tests", "data", "package")
+    pkgpath = os.path.join(tmpdir, "package")
+    shutil.copytree(srcpkgpath, pkgpath)
+    assert os.path.exists(pkgpath)
+
+    os.chdir(str(tmpdir))
 
     main(
         (
             "--package",
-            "pkg",
+            "package",
         ),
     )
 
-    with open("./pkg/n2/n3/n3_module.py", "r") as f:
-        flines = f.readlines()
+    module_paths = get_module_paths(package_name="package")
 
-    assert "from pkg.n2.n2_module import func3" == flines[0].strip()
+    for path in module_paths:
+        assert os.path.exists(path)
+        if path.endswith("n3_module.py"):
+            with open(path, "r") as f:
+                flines = f.readlines()
+            assert "from package.n2.n2_module import func3" == flines[0].strip()
 
-    shutil.rmtree("./pkg")
+    shutil.rmtree(pkgpath)
+    os.chdir(cwd)

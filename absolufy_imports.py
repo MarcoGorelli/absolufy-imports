@@ -5,7 +5,10 @@ import re
 import warnings
 from functools import wraps
 from pathlib import Path
+from typing import Union
+from typing import Callable
 from typing import Iterable
+from typing import List
 from typing import MutableMapping
 from typing import Optional
 from typing import Sequence
@@ -163,7 +166,7 @@ def absolute_imports(
     return 1
 
 
-def get_module_paths(package_name: str):
+def get_module_paths(package_name: str) -> List[str]:
 
     package_path = os.path.join("./", package_name)
 
@@ -184,9 +187,9 @@ def get_module_paths(package_name: str):
     return file_modules
 
 
-def ignore_warnings(f):
+def ignore_warnings(f: Callable[[str], int]) -> Callable:
     @wraps(f)
-    def inner(*args, **kwargs):
+    def inner(*args: tuple, **kwargs: dict) -> int:
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("ignore")
             response = f(*args, **kwargs)
@@ -196,16 +199,15 @@ def ignore_warnings(f):
 
 
 @ignore_warnings
-def to_absolute_imports(package_name: str):
+def to_absolute_imports(package_name: str) -> List[str]:
 
     srcs = [str(Path(i).resolve()) for i in [package_name]]
     files = [str(Path(file).resolve()) for file in get_module_paths(package_name)]
 
-    ret = 0
     for file in files:
-        ret |= absolute_imports(file, srcs, package_name=package_name)
+        absolute_imports(file, srcs, package_name=package_name)
 
-    return ret
+    return files
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
@@ -217,9 +219,12 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     args = parser.parse_args(argv)
 
     ret = 0
-    if args.package is not None:
-        ret |= to_absolute_imports(args.package)
-        return ret
+    if args.package:
+        try:
+            to_absolute_imports(args.package)
+            return ret
+        except:
+            return 1
 
     srcs = [str(Path(i).resolve()) for i in args.application_directories.split(":")]
     for file in args.files:
