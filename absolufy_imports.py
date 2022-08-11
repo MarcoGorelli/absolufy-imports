@@ -7,7 +7,11 @@ from typing import Iterable
 from typing import MutableMapping
 from typing import Optional
 from typing import Sequence
+from typing import Set
 from typing import Tuple
+
+
+files_to_absolufy: Set[str] = set()
 
 
 def _find_relative_depth(parts: Sequence[str], module: str) -> int:
@@ -97,10 +101,21 @@ def absolute_imports(
         srcs: Iterable[str],
         *,
         never: bool = False,
+        recursive: bool = False,
 ) -> int:
     relative_paths = []
     possible_srcs = []
     path = Path(file).resolve()
+
+    if path.is_dir() and recursive is True:
+        for file_path in path.iterdir():
+            is_visible_file: bool = str(file_path).startswith('.') is False
+
+            if is_visible_file:
+                files_to_absolufy.add(str(file_path))
+
+        return 0
+
     for src in srcs:
         try:
             path_relative_to_i = path.relative_to(src)
@@ -158,6 +173,11 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser.add_argument('--application-directories', default='.:src')
     parser.add_argument('files', nargs='*')
     parser.add_argument('--never', action='store_true')
+    parser.add_argument(
+        '-r', '--recursive',
+        help='absolufy imports for all files in directory',
+        action='store_true',
+    )
     args = parser.parse_args(argv)
 
     srcs = [
@@ -170,7 +190,19 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             file,
             srcs,
             never=args.never,
+            recursive=args.recursive,
         )
+
+    i = 0
+    while i < len(files_to_absolufy):
+        file_to_absolufy: str = files_to_absolufy.pop()
+        ret |= absolute_imports(
+            file_to_absolufy,
+            srcs,
+            never=args.never,
+            recursive=args.recursive,
+        )
+
     return ret
 
 

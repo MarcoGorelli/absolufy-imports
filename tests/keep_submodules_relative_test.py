@@ -1,17 +1,20 @@
 import os
 import shutil
+from pathlib import Path
 
 from absolufy_imports import main
 
 
 def test_main(tmpdir):
+    source_dir_1: Path = Path(__file__).parent / 'data/library1'
+    source_dir_2: Path = Path(__file__).parent / 'data/library2'
     os.mkdir(os.path.join(tmpdir, 'mypackage'))
     shutil.copytree(
-        os.path.join('tests', 'data', 'library1'),
+        source_dir_1,
         os.path.join(tmpdir, 'mypackage', 'library1'),
     )
     shutil.copytree(
-        os.path.join('tests', 'data', 'library2'),
+        source_dir_2,
         os.path.join(tmpdir, 'mypackage', 'library2'),
     )
     with open(os.path.join(tmpdir, 'otherpackage.py'), 'w') as fd:
@@ -53,14 +56,16 @@ def test_main(tmpdir):
 
 
 def test_main_src(tmpdir):
+    source_dir_1: Path = Path(__file__).parent / 'data/library1'
+    source_dir_2: Path = Path(__file__).parent / 'data/library2'
     os.mkdir(os.path.join(tmpdir, 'src'))
     os.mkdir(os.path.join(tmpdir, 'src', 'mypackage'))
     shutil.copytree(
-        os.path.join('tests', 'data', 'library1'),
+        source_dir_1,
         os.path.join(tmpdir, 'src', 'mypackage', 'library1'),
     )
     shutil.copytree(
-        os.path.join('tests', 'data', 'library2'),
+        source_dir_2,
         os.path.join(tmpdir, 'src', 'mypackage', 'library2'),
     )
     with open(os.path.join(tmpdir, 'src', 'otherpackage.py'), 'w') as fd:

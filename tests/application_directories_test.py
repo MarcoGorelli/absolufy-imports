@@ -1,30 +1,28 @@
 import os
 import shutil
+from pathlib import Path
 
 from absolufy_imports import main
 
 
 def test_main(tmpdir):
-    # make src/mypackage/mysubpackage/bar.py
+    # make src/mypackage/mysubpackage/sub_bar.py
+    source_file: Path = Path(__file__).parent / 'data/bar.py'
     os.mkdir(os.path.join(str(tmpdir), 'src'))
     os.mkdir(os.path.join(str(tmpdir), 'src', 'mypackage'))
     os.mkdir(os.path.join(str(tmpdir), 'src', 'mypackage', 'mysubpackage'))
     tmp_file = os.path.join(
         str(tmpdir), 'src', 'mypackage', 'mysubpackage', 'bar.py',
     )
-    shutil.copy(
-        os.path.join('tests', 'data', 'bar.py'), tmp_file,
-    )
+    shutil.copy(source_file, tmp_file)
 
-    # make mypackage/mysubpackage/bar.py
+    # make mypackage/mysubpackage/sub_bar.py
     os.mkdir(os.path.join(str(tmpdir), 'mypackage'))
     os.mkdir(os.path.join(str(tmpdir), 'mypackage', 'mysubpackage'))
     tmp_file_1 = os.path.join(
         str(tmpdir), 'mypackage', 'mysubpackage', 'bar.py',
     )
-    shutil.copy(
-        os.path.join('tests', 'data', 'bar.py'), tmp_file_1,
-    )
+    shutil.copy(source_file, tmp_file_1)
 
     cwd = os.getcwd()
     os.chdir(str(tmpdir))
@@ -78,26 +76,23 @@ def test_main(tmpdir):
 
 
 def test_main_inverted_order(tmpdir):
-    # make src/mypackage/mysubpackage/bar.py
+    # make src/mypackage/mysubpackage/sub_bar.py
+    source_file: Path = Path(__file__).parent / 'data/bar.py'
     os.mkdir(os.path.join(str(tmpdir), 'src'))
     os.mkdir(os.path.join(str(tmpdir), 'src', 'mypackage'))
     os.mkdir(os.path.join(str(tmpdir), 'src', 'mypackage', 'mysubpackage'))
     tmp_file = os.path.join(
         str(tmpdir), 'src', 'mypackage', 'mysubpackage', 'bar.py',
     )
-    shutil.copy(
-        os.path.join('tests', 'data', 'bar.py'), tmp_file,
-    )
+    shutil.copy(source_file, tmp_file)
 
-    # make mypackage/mysubpackage/bar.py
+    # make mypackage/mysubpackage/sub_bar.py
     os.mkdir(os.path.join(str(tmpdir), 'mypackage'))
     os.mkdir(os.path.join(str(tmpdir), 'mypackage', 'mysubpackage'))
     tmp_file_1 = os.path.join(
         str(tmpdir), 'mypackage', 'mysubpackage', 'bar.py',
     )
-    shutil.copy(
-        os.path.join('tests', 'data', 'bar.py'), tmp_file_1,
-    )
+    shutil.copy(source_file, tmp_file_1)
 
     cwd = os.getcwd()
     os.chdir(str(tmpdir))
@@ -151,15 +146,14 @@ def test_main_inverted_order(tmpdir):
 
 
 def test_relative_imports(tmpdir):
+    source_file: Path = Path(__file__).parent / 'data/bar.py'
     os.mkdir(os.path.join(str(tmpdir), 'src'))
     os.mkdir(os.path.join(str(tmpdir), 'src', 'mypackage'))
     os.mkdir(os.path.join(str(tmpdir), 'src', 'mypackage', 'mysubpackage'))
     tmp_file = os.path.join(
         str(tmpdir), 'src', 'mypackage', 'mysubpackage', 'bar.py',
     )
-    shutil.copy(
-        os.path.join('tests', 'data', 'bar.py'), tmp_file,
-    )
+    shutil.copy(source_file, tmp_file)
 
     cwd = os.getcwd()
     os.chdir(str(tmpdir))

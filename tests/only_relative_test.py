@@ -1,18 +1,18 @@
 import os
 import shutil
+from pathlib import Path
 
 from absolufy_imports import main
 
 
 def test_main(tmpdir):
+    source_file: Path = Path(__file__).parent / 'data/bar.py'
     os.mkdir(os.path.join(str(tmpdir), 'mypackage'))
     os.mkdir(os.path.join(str(tmpdir), 'mypackage', 'mysubpackage'))
     tmp_file = os.path.join(
         str(tmpdir), 'mypackage', 'mysubpackage', 'bar.py',
     )
-    shutil.copy(
-        os.path.join('tests', 'data', 'bar.py'), tmp_file,
-    )
+    shutil.copy(source_file, tmp_file)
 
     cwd = os.getcwd()
     os.chdir(str(tmpdir))

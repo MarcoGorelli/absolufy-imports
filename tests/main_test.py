@@ -1,5 +1,6 @@
 import os
 import shutil
+from pathlib import Path
 
 import pytest
 
@@ -7,14 +8,13 @@ from absolufy_imports import main
 
 
 def test_main(tmpdir):
+    source_file: Path = Path(__file__).parent / 'data/bar.py'
     os.mkdir(os.path.join(str(tmpdir), 'mypackage'))
     os.mkdir(os.path.join(str(tmpdir), 'mypackage', 'mysubpackage'))
     tmp_file = os.path.join(
         str(tmpdir), 'mypackage', 'mysubpackage', 'bar.py',
     )
-    shutil.copy(
-        os.path.join('tests', 'data', 'bar.py'), tmp_file,
-    )
+    shutil.copy(source_file, tmp_file)
 
     cwd = os.getcwd()
     os.chdir(str(tmpdir))
@@ -45,13 +45,14 @@ def test_main(tmpdir):
 
 
 def test_main_src(tmpdir):
+    source_file: Path = Path(__file__).parent / 'data/bar.py'
     os.mkdir(os.path.join(str(tmpdir), 'mypackage'))
     os.mkdir(os.path.join(str(tmpdir), 'mypackage', 'mysubpackage'))
     tmp_file = os.path.join(
         str(tmpdir), 'mypackage', 'mysubpackage', 'bar.py',
     )
     shutil.copy(
-        os.path.join('tests', 'data', 'bar.py'), tmp_file,
+        source_file, tmp_file,
     )
 
     cwd = os.getcwd()
@@ -85,13 +86,14 @@ def test_main_src(tmpdir):
 
 
 def test_noop(tmpdir):
+    source_file: Path = Path(__file__).parent / 'data/baz.py'
     os.mkdir(os.path.join(str(tmpdir), 'mypackage'))
     os.mkdir(os.path.join(str(tmpdir), 'mypackage', 'mysubpackage'))
     tmp_file = os.path.join(
         str(tmpdir), 'mypackage', 'mysubpackage', 'baz.py',
     )
     shutil.copy(
-        os.path.join('tests', 'data', 'baz.py'), tmp_file,
+        source_file, tmp_file,
     )
 
     cwd = os.getcwd()
@@ -110,25 +112,26 @@ def test_noop(tmpdir):
     with open(tmp_file) as fd:
         result = fd.read()
 
-    with open(os.path.join('tests', 'data', 'baz.py')) as fd:
+    with source_file.open() as fd:
         expected = fd.read()
 
     assert result == expected
 
 
 def test_bom_file():
+    test_file: Path = Path(__file__).parent / 'data/bom.py'
     main(
         (
             '--application-directories',
             '.',
-            os.path.join('tests', 'data', 'bom.py'),
+            str(test_file),
         ),
     )
 
 
 def test_non_utf8_file(capsys):
-    path = os.path.join('tests', 'data', 'non_utf8.py')
-    assert main((path,)) == 1
+    path = Path(__file__).parent / 'data/non_utf8.py'
+    assert main((str(path),)) == 1
     out, _ = capsys.readouterr()
     assert (out == f'{path} is non-utf-8 (not supported)\n')
 
