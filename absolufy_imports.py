@@ -81,7 +81,9 @@ class Visitor(ast.NodeVisitor):
             self.to_replace[
                 node.lineno
             ] = (rf'(from\s+){"."*level}\s*', f'\\1{absolute_import} ')
-        elif node.module and never:
+        elif node.module is not None and never \
+                or node.module is not None \
+                and len(node.module.split('.')) > self.depth_level:
             # e.g. from .b import c
             module = node.module
             self.to_replace[

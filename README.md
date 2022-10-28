@@ -74,29 +74,27 @@ $ absolufy-imports mypackage/myfile.py --never
 ```
 
 ### Depth (default: 0)
-Don't absolufy relative import less or equal to the specified depth.
+
+Don't absolufy (backward or forward) relative imports less or equal to the specified depth.
 
 Usage: `--depth N` with `N` as integer.
 
-* `--never` and `--depth N` are mutally exclusive
+* `--never` and `--depth N` are mutually exclusive
+
+In other words, when choosing `--depth 1` you can only use relative
+imports for files/folder in the same package. See above examples
 
 Folder:
 ```
 mypackage
-    | mysubpackage
-    |   | __init__.py
-    |   | example.py
-    | __init__.py
-    | main.py
+ |-- mysubpackage
+ |   |-- __init__.py
+ |   |-- example.py
+ |-- __init__.py
+ |-- main.py
 ```
 
-`__init__.py` content:
-```
-from .example import __file__
-from ..main import __file__
-```
-
-Examples:
+#### Examples (backward: `from ..X import A`) with `--depth 1`:
 * `$ absolufy-imports mypackage/mysubpackage/__init__.py --depth 1`
 
 ```diff
@@ -104,7 +102,6 @@ Examples:
 - from ..main import __file__
 + from mypackage.main import __file__
 ```
-
 * `$ absolufy-imports mypackage/mysubpackage/__init__.py --depth 0 # default value`
 
 ```diff
@@ -112,4 +109,24 @@ Examples:
 + from mypackage.mysubpackage.example import __file__
 - from ..main import __file__
 + from mypackage.main import __file__
+```
+
+With: `mypackage.mysubpackage.__init__.py` content:
+```
+from .example import __file__ # 1 level, same folder
+from ..main import __file__ # 2 levels, parent folder
+```
+
+#### Example (forward: `from .X.Y.Z import A`) with `--depth 1`:
+
+* `$ absolufy-imports mypackage/__init__.py --depth 1`
+```diff
+- from .mysubpackage.__init__ import __file__
++ from mypackage.mysubpackage.__init__ import __file__
+```
+
+With `mypackage.__init__.py` content:
+```
+from .mysubpackage.__init__ import __file__
+from .mysubpackage import __init__ as i
 ```

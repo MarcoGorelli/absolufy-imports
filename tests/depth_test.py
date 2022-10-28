@@ -8,10 +8,10 @@ def test_depth(tmpdir):
     os.mkdir(os.path.join(str(tmpdir), 'mypackage'))
     os.mkdir(os.path.join(str(tmpdir), 'mypackage', 'mysubpackage'))
     tmp_file = os.path.join(
-        str(tmpdir), 'mypackage', 'mysubpackage', 'bar.py',
+        str(tmpdir), 'mypackage', 'mysubpackage', 'depth.py',
     )
     shutil.copy(
-        os.path.join('tests', 'data', 'bar.py'), tmp_file,
+        os.path.join('tests', 'data', 'depth.py'), tmp_file,
     )
 
     cwd = os.getcwd()
@@ -19,7 +19,7 @@ def test_depth(tmpdir):
     try:
         main(
             (
-                os.path.join('mypackage', 'mysubpackage', 'bar.py'),
+                os.path.join('mypackage', 'mysubpackage', 'depth.py'),
                 '--depth',
                 '1',
             ),
@@ -29,10 +29,11 @@ def test_depth(tmpdir):
 
     with open(tmp_file) as fd:
         result = fd.read()
-
     expected = (
-        'from mypackage.mysubpackage import B\n'
-        'from mypackage.mysubpackage.bar import baz\n'
+        'from mypackage.mysubpackage import already_absolute\n'
+        'from mypackage.mysubpackage import already_absolute as f\n'
+        'from mypackage.mysubpackage.foo.bar import baz\n'
+        'from mypackage.mysubpackage.foo.bar.baz import baz\n'
         'from mypackage.foo import T\n'
         'from .bar import D\n'
         'from . import O\n'
