@@ -113,8 +113,8 @@ mypackage
 
 With: `mypackage.mysubpackage.__init__.py` content:
 ```
-from .example import __file__ # 1 level, same folder
-from ..main import __file__ # 2 levels, parent folder
+from .example import __file__
+from ..main import __file__
 ```
 
 #### Example (forward: `from .X.Y.Z import A`) with `--depth 1`:
@@ -123,6 +123,7 @@ from ..main import __file__ # 2 levels, parent folder
 ```diff
 - from .mysubpackage.__init__ import __file__
 + from mypackage.mysubpackage.__init__ import __file__
+  from .mysubpackage import __init__ as i
 ```
 
 With `mypackage.__init__.py` content:
