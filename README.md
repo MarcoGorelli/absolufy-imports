@@ -72,3 +72,44 @@ $ absolufy-imports mypackage/myfile.py --never
 - from mypackage import __version__
 + from . import __version__
 ```
+
+### Depth (default: 0)
+Don't absolufy relative import less or equal to the specified depth.
+
+Usage: `--depth N` with `N` as integer.
+
+* `--never` and `--depth N` are mutally exclusive
+
+Folder:
+```
+mypackage
+    | mysubpackage
+    |   | __init__.py
+    |   | example.py
+    | __init__.py
+    | main.py
+```
+
+`__init__.py` content:
+```
+from .example import __file__
+from ..main import __file__
+```
+
+Examples:
+* `$ absolufy-imports mypackage/mysubpackage/__init__.py --depth 1`
+
+```diff
+  from .example import __file__
+- from ..main import __file__
++ from mypackage.main import __file__
+```
+
+* `$ absolufy-imports mypackage/mysubpackage/__init__.py --depth 0 # default value`
+
+```diff
+- from .example import __file__
++ from mypackage.mysubpackage.example import __file__
+- from ..main import __file__
++ from mypackage.main import __file__
+```

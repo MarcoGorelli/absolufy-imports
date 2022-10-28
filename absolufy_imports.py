@@ -27,26 +27,28 @@ class Visitor(ast.NodeVisitor):
             srcs: Iterable[str],
             *,
             never: bool,
+            depth_level: int = 0,
     ) -> None:
         self.parts = parts
         self.srcs = srcs
         self.to_replace: MutableMapping[int, Tuple[str, str]] = {}
         self.never = never
+        self.depth_level = depth_level
 
     def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
         level = node.level
         is_absolute = level == 0
         absolute_import = '.'.join(self.parts[:-level])
 
-        should_be_relative = bool(self.never)
-        if is_absolute ^ should_be_relative:
+        never = bool(self.never)
+        if is_absolute ^ never:
             self.generic_visit(node)
             return
 
         def is_python_file_or_dir(path: str) -> bool:
             return os.path.exists(path+'.py') or os.path.isdir(path)
 
-        if should_be_relative:
+        if never:
             assert node.module is not None  # help mypy
             if not any(
                 is_python_file_or_dir(
@@ -66,7 +68,6 @@ class Visitor(ast.NodeVisitor):
                 # e.g. from a.b.c import d -> from ..c import d
                 n_dots = inverse_depth - 1
             replacement = f'\\1{"."*n_dots}'
-
             self.to_replace[node.lineno] = (
                 rf'(from\s+){".".join(self.parts[:depth])}',
                 replacement,
@@ -74,12 +75,13 @@ class Visitor(ast.NodeVisitor):
             self.generic_visit(node)
             return
 
-        if node.module is None:
+        never |= level > self.depth_level
+        if node.module is None and never:
             # e.g. from . import b
             self.to_replace[
                 node.lineno
             ] = (rf'(from\s+){"."*level}\s*', f'\\1{absolute_import} ')
-        else:
+        elif node.module and never:
             # e.g. from .b import c
             module = node.module
             self.to_replace[
@@ -97,6 +99,7 @@ def absolute_imports(
         srcs: Iterable[str],
         *,
         never: bool = False,
+        depth: int = 0,
 ) -> int:
     relative_paths = []
     possible_srcs = []
@@ -134,6 +137,7 @@ def absolute_imports(
         relative_path.parts,
         srcs,
         never=never,
+        depth_level=depth,
     )
     visitor.visit(tree)
 
@@ -157,9 +161,13 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument('--application-directories', default='.:src')
     parser.add_argument('files', nargs='*')
-    parser.add_argument('--never', action='store_true')
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('--never', action='store_true')
+    group.add_argument(
+        '--depth', metavar='N', type=int, default=0,
+        help='Skip all paths less or equal to this depth.',
+    )
     args = parser.parse_args(argv)
-
     srcs = [
         str(Path(i).resolve())
         for i in args.application_directories.split(':')
@@ -170,6 +178,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             file,
             srcs,
             never=args.never,
+            depth=args.depth,
         )
     return ret
 
