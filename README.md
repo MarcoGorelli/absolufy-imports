@@ -82,7 +82,7 @@ Usage: `--depth N` with `N` as integer.
 * `--never` and `--depth N` are mutually exclusive
 
 In other words, when choosing `--depth 1` you can only use relative
-imports for files/folder in the same package. See above examples
+imports for files/folders in the same package. See the following examples
 
 Folder:
 ```
