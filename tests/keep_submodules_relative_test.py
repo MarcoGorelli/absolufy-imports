@@ -30,6 +30,7 @@ def copy_data(tmp_path):
 
 expected_never = (
     'from . import baz\n'
+    'from .subsubdirectory import bazz\n'
     'from . import foo2\n'
     'from .. import foo\n'
     'from mypackage.library1.othersubdirectory import quox\n'
@@ -67,6 +68,7 @@ def test_main(tmp_path, copy_data, src):
 
 expected_local = (
     'from . import baz\n'
+    'from .subsubdirectory import bazz\n'
     'from . import foo2\n'
     'from mypackage.library1 import foo\n'
     'from mypackage.library1.othersubdirectory import quox\n'

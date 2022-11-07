@@ -1,4 +1,5 @@
 from mypackage.library1.subdirectory import baz
+from mypackage.library1.subdirectory.subsubdirectory import bazz
 from . import foo2
 from mypackage.library1 import foo
 from mypackage.library1.othersubdirectory import quox
