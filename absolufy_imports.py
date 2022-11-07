@@ -39,8 +39,13 @@ class Visitor(ast.NodeVisitor):
         level = node.level
         is_absolute = level == 0
         absolute_import = '.'.join(self.parts[:-level])
+        current_path = '.'.join(self.parts[: -1])
 
-        should_be_relative = bool(self.never) or self.allow_local and node.level == 1
+        should_be_relative = bool(self.never) or (
+            self.allow_local and (
+                node.level == 1 or node.module == current_path
+            )
+        )
         if is_absolute ^ should_be_relative:
             self.generic_visit(node)
             return
