@@ -60,10 +60,6 @@ $ absolufy-imports src/mypackage/myfile.py --application-directories src
 
 Multiple application directories should be colon-separated, e.g. `--application-directories .:src`. This is the same as in [reorder-python-imports](https://github.com/asottile/reorder_python_imports).
 
-### Relative imports if some condition else absolute
-
-naah, keep it simple
-
 ### Run on directory
 
 I'd suggest using [pre-commit](https://pre-commit.com/).
@@ -72,3 +68,7 @@ Either that, or
 ```
 git ls-files | grep '\.py$' | xargs absolufy-imports
 ```
+
+### Relative imports if some condition else absolute
+
+naah...
