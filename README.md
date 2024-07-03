@@ -2,6 +2,12 @@
 [![Coverage](https://codecov.io/gh/MarcoGorelli/absolufy-imports/branch/main/graph/badge.svg)](https://codecov.io/gh/MarcoGorelli/absolufy-imports)
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/MarcoGorelli/absolufy-imports/main.svg)](https://results.pre-commit.ci/latest/github/MarcoGorelli/absolufy-imports/main)
 
+## NOTE
+
+This tool has been superseded by Ruff https://docs.astral.sh/ruff/rules/relative-imports/. Please use that instead.
+
+R.I.P. `absolufy-imports`
+
 absolufy-imports
 ================
 
